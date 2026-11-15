@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Smart Study | आपका AI शिक्षक</title>
+<style>
+:root{--bg:#07111f;--panel:#101e32;--panel2:#152740;--text:#f4f8ff;--muted:#a9bad2;--blue:#62a8ff;--purple:#9b7cff;--line:#263b58}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#182b50 0,transparent 35%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1050px;margin:auto;padding:22px 16px 60px}.top{display:flex;align-items:center;gap:12px;margin-bottom:35px}.logo{width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,var(--blue),var(--purple));display:grid;place-items:center;font-size:24px}.brand{font-weight:800;font-size:19px}.subbrand{font-size:12px;color:var(--muted)}
+.hero{text-align:center;margin:25px auto 28px;max-width:760px}.tag{display:inline-block;border:1px solid #35557b;border-radius:99px;padding:7px 12px;color:#bcd9ff;font-size:13px;background:#10213a}.hero h1{font-size:clamp(32px,7vw,58px);line-height:1.1;margin:17px 0;background:linear-gradient(90deg,#fff,#9ecaff,#c6aaff);-webkit-background-clip:text;color:transparent}.hero p{color:var(--muted);font-size:16px;line-height:1.7;margin:0 auto}
+.card{background:linear-gradient(180deg,#12233a,#0d1a2c);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 20px 60px #0002}.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}label{font-size:13px;color:var(--muted);display:block;margin-bottom:7px}select,textarea{width:100%;background:#091627;color:var(--text);border:1px solid #2b4260;border-radius:12px;padding:12px;font:inherit;outline:none}textarea{min-height:125px;resize:vertical;line-height:1.5}select:focus,textarea:focus{border-color:var(--blue)}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:13px}.btn{border:0;border-radius:12px;padding:12px 17px;font-weight:700;font-size:14px;cursor:pointer}.primary{background:linear-gradient(100deg,#4b9cff,#8b6cff);color:white;flex:1}.secondary{background:#1a2d47;color:#dbeaff;border:1px solid #304a6b}.result{display:none;margin-top:18px;border:1px solid #29486a;background:#0a192b;border-radius:16px;padding:16px;line-height:1.7}.result h3{margin:0 0 8px;color:#a8d3ff}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}.feature{background:#0d1b2d;border:1px solid #203650;border-radius:16px;padding:15px}.feature .emoji{font-size:24px}.feature strong{display:block;margin:8px 0 5px}.feature p{font-size:13px;color:var(--muted);line-height:1.5;margin:0}.foot{text-align:center;color:#7f94af;font-size:12px;margin-top:25px}
+@media(max-width:620px){.controls{grid-template-columns:1fr}.features{grid-template-columns:1fr}.card{padding:15px}.hero p{font-size:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="logo">🎓</div><div><div class="brand">AI Smart Study</div><div class="subbrand">सीखें • समझें • आगे बढ़ें</div></div></header>
+<section class="hero"><span class="tag">✨ आपका स्मार्ट AI शिक्षक</span><h1>हर सवाल का<br>आसान समाधान</h1><p>अपना सवाल पूछें और विषय को आसान भाषा में समझें।<br>कक्षा 1 से 12 तक के विद्यार्थियों के लिए।</p></section>
+<section class="card">
+<div class="controls">
+<div><label for="class">अपनी कक्षा चुनें</label><select id="class"><option>कक्षा 1</option><option>कक्षा 2</option><option>कक्षा 3</option><option>कक्षा 4</option><option>कक्षा 5</option><option>कक्षा 6</option><option>कक्षा 7</option><option>कक्षा 8</option><option>कक्षा 9</option><option selected>कक्षा 10</option><option>कक्षा 11</option><option>कक्षा 12</option></select></div>
+<div><label for="subject">विषय चुनें</label><select id="subject"><option>गणित (Maths)</option><option>विज्ञान (Science)</option><option>हिंदी</option><option>English</option><option>सामाजिक विज्ञान</option><option>कंप्यूटर</option><option>अन्य विषय</option></select></div>
+</div>
+<label for="question">अपना सवाल लिखें</label><textarea id="question" placeholder="उदाहरण: प्रकाश संश्लेषण क्या है? आसान भाषा में समझाइए..."></textarea>
+<div class="actions"><button class="btn secondary" id="photoBtn" type="button">📷 फोटो चुनें</button><input type="file" id="photo" accept="image/*" hidden><button class="btn primary" id="ask" type="button">✨ सवाल का हल देखें</button></div>
+<div id="fileName" style="font-size:12px;color:#a9bad2;margin-top:8px"></div>
+<div class="result" id="result"><h3>📘 डेमो उत्तर</h3><div id="answer"></div><p style="color:#a9bad2;font-size:12px;margin-bottom:0">यह अभी नमूना स्क्रीन है। वास्तविक AI उत्तर पाने के लिए सुरक्षित AI API कनेक्शन जोड़ना होगा।</p></div>
+</section>
+<section class="features">
+<div class="feature"><div class="emoji">🧮</div><strong>स्टेप-बाय-स्टेप हल</strong><p>गणित और कठिन सवालों को चरणों में समझें।</p></div>
+<div class="feature"><div class="emoji">📷</div><strong>फोटो से सवाल</strong><p>किताब के सवाल की फोटो चुनने की सुविधा।</p></div>
+<div class="feature"><div class="emoji">🌐</div><strong>आसान भाषा</strong><p>हिंदी और अंग्रेजी में पढ़ाई का अनुभव।</p></div>
+</section>
+<div class="foot">AI Smart Study • सीखना अब आसान</div>
+</div>
+<script>
+const ask=document.getElementById('ask'),q=document.getElementById('question'),r=document.getElementById('result'),a=document.getElementById('answer');
+document.getElementById('photoBtn').onclick=()=>document.getElementById('photo').click();
+document.getElementById('photo').onchange=e=>document.getElementById('fileName').textContent=e.target.files[0]?'चुनी गई फोटो: '+e.target.files[0].name:'';
+ask.onclick=()=>{
+ const text=q.value.trim(); if(!text){q.focus();alert('पहले अपना सवाल लिखें।');return;}
+ r.style.display='block';a.textContent='आपका सवाल: '+text+'\\n\\nयह वेबसाइट का शुरुआती डेमो है। अगले चरण में हम AI API जोड़ेंगे, जिससे आपके सवाल का वास्तविक उत्तर और पूरा हल मिलेगा।';
+ r.scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+</script>
+</body></html>
