@@ -5,7 +5,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Smart Study</title>
-
 <style>
 *{box-sizing:border-box}
 body{
@@ -43,15 +42,33 @@ button:disabled{opacity:.5}
 }
 .mode button{margin:0;min-height:55px}
 .mode button.active{background:#637cff;color:white}
-#result{
- white-space:pre-wrap;line-height:1.8;
- overflow-wrap:anywhere
-}
+#result{white-space:pre-wrap;line-height:1.8;overflow-wrap:anywhere}
 #status{margin-bottom:12px;color:#aebbe0}
 footer{text-align:center;color:#9aa6cc;padding:20px}
+.quiz-question{
+ background:#0e1529;padding:15px;
+ border-radius:12px;margin:15px 0;
+ border:1px solid #354365
+}
+.quiz-option{
+ display:flex;align-items:center;gap:10px;
+ padding:11px;margin:8px 0;
+ background:#192541;border-radius:9px;
+ cursor:pointer;font-weight:normal
+}
+.quiz-option input{
+ width:18px;height:18px;padding:0;flex-shrink:0
+}
+.correct{border:1px solid #35c982;background:#123b32}
+.wrong{border:1px solid #ff6868;background:#421f2b}
+.explanation{color:#b8c2e8;margin-top:10px}
+.score{
+ text-align:center;background:#192541;
+ padding:20px;border-radius:12px;margin:15px 0
+}
+.score h2{color:#8b9cff}
 </style>
 </head>
-
 <body>
 <div class="container">
 
@@ -158,18 +175,19 @@ const FUNCTION_URL =
 "https://rhahfromeeouetxlvmom.supabase.co/functions/v1/smart-service";
 
 let currentMode="question";
+let currentQuiz=[];
 
 const modeNames={
  question:"✨ AI से उत्तर प्राप्त करें",
  chapter:"📖 अध्याय समझाएँ",
- mcq:"🎯 MCQ अभ्यास शुरू करें",
+ mcq:"🎯 MCQ टेस्ट शुरू करें",
  board:"📝 बोर्ड प्रश्न प्राप्त करें"
 };
 
 const modeInfo={
  question:"अपना सवाल लिखें और AI शिक्षक से समाधान पाएँ।",
  chapter:"अध्याय का परिचय, परिभाषाएँ, सूत्र और उदाहरण।",
- mcq:"5 MCQ प्रश्न, चार विकल्प, सही उत्तर और व्याख्या।",
+ mcq:"5 MCQ प्रश्न हल करें और अपना स्कोर देखें।",
  board:"5 महत्वपूर्ण परीक्षा प्रश्न और उनके उत्तर।"
 };
 
@@ -200,7 +218,6 @@ function formatAnswer(text){
 }
 
 function makePrompt(className,subject,language,chapter){
-
  const base=
  `कक्षा ${className}, विषय ${subject}, अध्याय "${chapter}"। `+
  `उत्तर ${language} भाषा में दीजिए। `+
@@ -237,8 +254,108 @@ function makePrompt(className,subject,language,chapter){
  }
 }
 
-async function getAnswer(){
+function escapeHTML(value){
+ return String(value).replace(/[&<>"']/g,function(ch){
+  return {
+   "&":"&amp;",
+   "<":"&lt;",
+   ">":"&gt;",
+   '"':"&quot;",
+   "'":"&#039;"
+  }[ch];
+ });
+}
 
+function showQuiz(quiz){
+ currentQuiz=quiz;
+ const result=document.getElementById("result");
+
+ let html="";
+
+ quiz.forEach((q,index)=>{
+  html+=`
+  <div class="quiz-question" id="question${index}">
+   <h3>प्रश्न ${index+1}. ${escapeHTML(q.question)}</h3>
+   ${["A","B","C","D"].map(letter=>`
+    <label class="quiz-option" id="option${index}${letter}">
+     <input type="radio" name="answer${index}" value="${letter}">
+     <span>${letter}. ${escapeHTML(q.options[letter])}</span>
+    </label>
+   `).join("")}
+   <div class="explanation" id="explanation${index}" style="display:none"></div>
+  </div>`;
+ });
+
+ html+=`
+ <button class="primary" id="submitQuiz" onclick="submitQuiz()">
+ अपना टेस्ट जमा करें
+ </button>
+ <div id="scoreBox"></div>
+ `;
+
+ result.innerHTML=html;
+}
+
+function submitQuiz(){
+ let score=0;
+ let attempted=0;
+
+ currentQuiz.forEach((q,index)=>{
+  const selected=document.querySelector(
+   `input[name="answer${index}"]:checked`
+  );
+
+  if(selected) attempted++;
+
+  const correct=q.correctAnswer;
+
+  if(selected && selected.value===correct){
+   score++;
+  }
+
+  ["A","B","C","D"].forEach(letter=>{
+   const input=document.querySelector(
+    `input[name="answer${index}"][value="${letter}"]`
+   );
+   input.disabled=true;
+
+   const label=document.getElementById(
+    `option${index}${letter}`
+   );
+
+   if(letter===correct){
+    label.classList.add("correct");
+   }else if(selected && selected.value===letter){
+    label.classList.add("wrong");
+   }
+  });
+
+  const explanation=document.getElementById(
+   `explanation${index}`
+  );
+
+  explanation.style.display="block";
+  explanation.textContent=
+   "सही उत्तर: "+correct+" — "+q.options[correct]+
+   "\nव्याख्या: "+q.explanation;
+ });
+
+ const percentage=Math.round((score/currentQuiz.length)*100);
+
+ document.getElementById("scoreBox").innerHTML=`
+ <div class="score">
+  <h2>🎉 आपका टेस्ट पूरा हुआ!</h2>
+  <h1>${score} / ${currentQuiz.length}</h1>
+  <h3>${percentage}% अंक</h3>
+  <p>आपने ${attempted} प्रश्न हल किए।</p>
+  <p>${score===5?"बहुत शानदार!":score>=3?"बहुत अच्छा प्रयास!":"अभ्यास जारी रखें, आप बेहतर करेंगे!"}</p>
+  <button class="primary" onclick="getAnswer()">🔄 दोबारा टेस्ट दें</button>
+ </div>`;
+
+ document.getElementById("submitQuiz").disabled=true;
+}
+
+async function getAnswer(){
  const className=document.getElementById("className").value;
  const subject=document.getElementById("subject").value;
  const language=document.getElementById("language").value;
@@ -291,8 +408,17 @@ async function getAnswer(){
    throw new Error(data.error||"उत्तर प्राप्त नहीं हुआ");
   }
 
-  status.textContent="✅ उत्तर सफलतापूर्वक प्राप्त हुआ!";
-  result.textContent=formatAnswer(data.answer||"उत्तर उपलब्ध नहीं है।");
+  if(currentMode==="mcq"){
+   if(!Array.isArray(data.quiz)||data.quiz.length!==5){
+    throw new Error("MCQ टेस्ट का डेटा सही नहीं मिला।");
+   }
+
+   status.textContent="✅ आपका टेस्ट तैयार है। सभी सवाल हल करें!";
+   showQuiz(data.quiz);
+  }else{
+   status.textContent="✅ उत्तर सफलतापूर्वक प्राप्त हुआ!";
+   result.textContent=formatAnswer(data.answer||"उत्तर उपलब्ध नहीं है।");
+  }
 
  }catch(error){
   status.textContent="❌ त्रुटि";
