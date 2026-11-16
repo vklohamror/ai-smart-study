@@ -3,54 +3,86 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Smart Study</title>
 
 <style>
-:root {
-  --bg:#07111f;
-  --panel:#101e32;
-  --text:#f4f8ff;
-  --muted:#a9bad2;
-  --blue:#62a8ff;
-  --purple:#9b7cff;
+:root{
+--bg:#07111f;
+--panel:#101e32;
+--text:#f4f8ff;
+--muted:#a9bad2;
+--blue:#62a8ff;
+--purple:#9b7cff;
 }
 *{box-sizing:border-box}
 body{
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:system-ui,sans-serif
+margin:0;
+background:var(--bg);
+color:var(--text);
+font-family:system-ui,sans-serif;
 }
 .wrap{max-width:900px;margin:auto;padding:20px 15px 50px}
 .top{display:flex;align-items:center;gap:12px;margin-bottom:25px}
-.logo{font-size:30px}
-.brand{font-size:20px;font-weight:800}
+.logo{font-size:32px}
+.brand{font-size:21px;font-weight:800}
 .subbrand{font-size:12px;color:var(--muted)}
-.hero{text-align:center;margin:25px 0}
-.hero h1{font-size:38px;color:#a8d3ff}
-.hero p{color:var(--muted);line-height:1.7}
+.hero{text-align:center;margin:30px 0}
+.hero h1{font-size:32px;color:#a8d3ff}
+.hero p{color:var(--muted);line-height:1.8}
 .card{
- background:var(--panel);border:1px solid #263b58;
- border-radius:20px;padding:18px
+background:var(--panel);
+border:1px solid #263b58;
+border-radius:20px;
+padding:18px;
 }
-label{display:block;color:var(--muted);margin:12px 0 7px}
+label{display:block;color:var(--muted);margin:14px 0 7px}
 select,textarea{
- width:100%;padding:13px;border-radius:12px;
- background:#091627;color:white;border:1px solid #304a6b;
- font:inherit
+width:100%;
+padding:14px;
+border-radius:12px;
+background:#091627;
+color:white;
+border:1px solid #304a6b;
+font:inherit;
 }
-textarea{min-height:130px}
+textarea{min-height:130px;resize:vertical}
 button{
- padding:13px;border:0;border-radius:12px;
- font-weight:bold;cursor:pointer
+padding:14px;
+border:0;
+border-radius:12px;
+font-weight:bold;
+font-size:15px;
+cursor:pointer;
 }
-.primary{background:linear-gradient(100deg,#4b9cff,#8b6cff);color:white;width:100%;margin-top:15px}
+.primary{
+background:linear-gradient(100deg,#4b9cff,#8b6cff);
+color:white;
+width:100%;
+margin-top:18px;
+}
+.primary:disabled{opacity:.6}
 .secondary{background:#1a2d47;color:white;width:100%;margin-top:10px}
 .result{
- display:none;margin-top:20px;background:#091627;
- padding:16px;border-radius:15px;line-height:1.8;
- white-space:pre-wrap;overflow-wrap:anywhere
+display:none;
+margin-top:20px;
+background:#091627;
+padding:16px;
+border-radius:15px;
+line-height:1.8;
+overflow-wrap:anywhere;
 }
-.status{color:#a8d3ff;margin-bottom:10px;font-weight:bold}
+.status{color:#a8d3ff;margin-bottom:12px;font-weight:bold}
+.answer{
+white-space:pre-wrap;
+font-size:16px;
+}
+.error{
+color:#ffb6b6;
+white-space:pre-wrap;
+overflow-wrap:anywhere;
+font-size:13px;
+}
 .features{display:grid;gap:12px;margin-top:20px}
 .feature{background:#101e32;padding:15px;border-radius:15px}
 .foot{text-align:center;color:#8498b3;margin-top:25px;font-size:12px}
@@ -70,116 +102,206 @@ button{
 
 <section class="hero">
 <h1>हर सवाल का आसान समाधान</h1>
-<p>अपना सवाल पूछें और AI शिक्षक से समझें।<br>कक्षा 1 से 12 तक के विद्यार्थियों के लिए।</p>
+<p>
+अपना सवाल पूछें और AI शिक्षक से समझें।<br>
+कक्षा 1 से 12 तक के विद्यार्थियों के लिए।
+</p>
 </section>
 
 <section class="card">
 
 <label>अपनी कक्षा चुनें</label>
 <select id="class">
-<option>कक्षा 1</option><option>कक्षा 2</option>
-<option>कक्षा 3</option><option>कक्षा 4</option>
-<option>कक्षा 5</option><option>कक्षा 6</option>
-<option>कक्षा 7</option><option>कक्षा 8</option>
-<option>कक्षा 9</option><option selected>कक्षा 10</option>
-<option>कक्षा 11</option><option>कक्षा 12</option>
+<option>कक्षा 1</option>
+<option>कक्षा 2</option>
+<option>कक्षा 3</option>
+<option>कक्षा 4</option>
+<option>कक्षा 5</option>
+<option>कक्षा 6</option>
+<option>कक्षा 7</option>
+<option>कक्षा 8</option>
+<option>कक्षा 9</option>
+<option selected>कक्षा 10</option>
+<option>कक्षा 11</option>
+<option>कक्षा 12</option>
 </select>
 
 <label>विषय चुनें</label>
 <select id="subject">
 <option>गणित (Maths)</option>
 <option>विज्ञान (Science)</option>
-<option>हिंदी</option><option>English</option>
-<option>सामाजिक विज्ञान</option><option>कंप्यूटर</option>
+<option>हिंदी</option>
+<option>English</option>
+<option>सामाजिक विज्ञान</option>
+<option>कंप्यूटर</option>
 <option>अन्य विषय</option>
 </select>
 
 <label>उत्तर की भाषा</label>
 <select id="language">
-<option>Hindi</option>
-<option>English</option>
+<option value="Hindi">Hindi</option>
+<option value="English">English</option>
 </select>
 
 <label>अपना सवाल लिखें</label>
 <textarea id="question" placeholder="उदाहरण: प्रकाश संश्लेषण क्या है?"></textarea>
 
-<button class="primary" id="ask">✨ AI से उत्तर प्राप्त करें</button>
+<button class="primary" id="ask">
+✨ AI से उत्तर प्राप्त करें
+</button>
 
 <div class="result" id="result">
 <div class="status" id="status">AI उत्तर</div>
-<div id="answer"></div>
+<div class="answer" id="answer"></div>
+<div class="error" id="error"></div>
 </div>
 
 </section>
 
 <section class="features">
-<div class="feature">📘 <b>Step-by-Step समाधान</b><br>कठिन सवाल आसान भाषा में।</div>
-<div class="feature">🌐 <b>Hindi और English</b><br>अपनी पसंद की भाषा में पढ़ें।</div>
-<div class="feature">🎓 <b>कक्षा 1–12</b><br>स्कूल के विद्यार्थियों के लिए।</div>
+<div class="feature">
+📘 <b>Step-by-Step समाधान</b><br>
+कठिन सवाल आसान भाषा में।
+</div>
+<div class="feature">
+🌐 <b>Hindi और English</b><br>
+अपनी पसंद की भाषा में पढ़ें।
+</div>
+<div class="feature">
+🎓 <b>कक्षा 1–12</b><br>
+स्कूल के विद्यार्थियों के लिए।
+</div>
 </section>
 
-<div class="foot">AI Smart Study • सीखना अब आसान</div>
+<div class="foot">
+AI Smart Study • सीखना अब आसान
+</div>
+
 </div>
 
 <script>
-const SUPABASE_URL =
-"https://rhahfromeeouetxlvmom.supabase.co";
-
 const FUNCTION_URL =
-SUPABASE_URL + "/functions/v1/smart-service";
+"https://rhahfromeeouetxlvmom.supabase.co/functions/v1/smart-service";
 
 const ask = document.getElementById("ask");
 const question = document.getElementById("question");
 const result = document.getElementById("result");
 const answer = document.getElementById("answer");
-const status = document.getElementById("status");
+const statusBox = document.getElementById("status");
+const errorBox = document.getElementById("error");
 
-ask.onclick = async () => {
-  const text = question.value.trim();
+ask.onclick = async function(){
 
-  if (!text) {
-    alert("पहले अपना सवाल लिखें।");
-    question.focus();
-    return;
-  }
+const text = question.value.trim();
 
-  result.style.display = "block";
-  answer.textContent = "";
-  status.textContent = "⏳ Gemini AI उत्तर तैयार कर रहा है...";
-  ask.disabled = true;
-  ask.textContent = "कृपया प्रतीक्षा करें...";
+if(!text){
+alert("पहले अपना सवाल लिखें।");
+question.focus();
+return;
+}
 
-  try {
-    const response = await fetch(FUNCTION_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        question: text,
-        className: document.getElementById("class").value,
-        subject: document.getElementById("subject").value,
-        language: document.getElementById("language").value
-      })
-    });
+result.style.display="block";
+answer.textContent="";
+errorBox.textContent="";
+statusBox.textContent="⏳ Gemini AI उत्तर तैयार कर रहा है...";
+ask.disabled=true;
+ask.textContent="कृपया प्रतीक्षा करें...";
 
-    const data = await response.json();
+try{
 
-    if (!response.ok || data.error) {
-      throw new Error(data.error || "AI उत्तर नहीं मिला");
-    }
+const controller=new AbortController();
 
-    status.textContent = "📘 आपका AI उत्तर";
-    answer.textContent = data.answer || "उत्तर नहीं मिला";
+const timeout=setTimeout(()=>{
+controller.abort();
+},90000);
 
-  } catch (error) {
-    status.textContent = "❌ Error";
-    answer.textContent =
-      "उत्तर प्राप्त नहीं हुआ: " + error.message;
-  } finally {
-    ask.disabled = false;
-    ask.textContent = "✨ AI से उत्तर प्राप्त करें";
-  }
+let response;
+
+try{
+
+response=await fetch(FUNCTION_URL,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+question:text,
+className:document.getElementById("class").value,
+subject:document.getElementById("subject").value,
+language:document.getElementById("language").value
+}),
+signal:controller.signal
+});
+
+}finally{
+clearTimeout(timeout);
+}
+
+const raw=await response.text();
+
+let data;
+
+try{
+data=JSON.parse(raw);
+}catch{
+data={raw:raw};
+}
+
+if(!response.ok){
+
+throw new Error(
+"HTTP Status: "+response.status+
+"\n\nServer Response:\n"+
+JSON.stringify(data,null,2)
+);
+
+}
+
+let aiAnswer=
+data.answer ||
+data.text ||
+data.output_text ||
+data.candidates?.[0]?.content?.parts
+?.map(part=>part.text||"")
+.join("") ||
+data.result?.answer ||
+"";
+
+if(typeof aiAnswer!=="string"){
+aiAnswer=JSON.stringify(aiAnswer);
+}
+
+if(!aiAnswer.trim()){
+
+throw new Error(
+"उत्तर खाली मिला। Server Response:\n"+
+JSON.stringify(data,null,2)
+);
+
+}
+
+statusBox.textContent="📘 आपका AI उत्तर";
+answer.textContent=aiAnswer;
+
+}catch(error){
+
+statusBox.textContent="❌ उत्तर प्राप्त नहीं हुआ";
+
+if(error.name==="AbortError"){
+errorBox.textContent=
+"अनुरोध में बहुत समय लगा। कृपया दोबारा कोशिश करें।";
+}else{
+errorBox.textContent=
+error.message || String(error);
+}
+
+}finally{
+
+ask.disabled=false;
+ask.textContent="✨ AI से उत्तर प्राप्त करें";
+
+}
+
 };
 </script>
 
