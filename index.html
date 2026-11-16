@@ -10,8 +10,7 @@
 *{box-sizing:border-box}
 body{
  margin:0;font-family:Arial,sans-serif;
- background:#0b1020;color:#fff;
- padding:18px
+ background:#0b1020;color:#fff;padding:18px
 }
 .container{max-width:650px;margin:auto}
 header{text-align:center;padding:20px 0}
@@ -31,22 +30,24 @@ select,input,textarea{
 }
 textarea{min-height:120px;resize:vertical}
 button{
- width:100%;padding:15px;margin-top:15px;
- border:0;border-radius:12px;font-size:17px;
+ width:100%;padding:14px;margin-top:12px;
+ border:0;border-radius:12px;font-size:16px;
  font-weight:bold;cursor:pointer
 }
 .primary{background:#637cff;color:white}
 .secondary{background:#26365b;color:white}
 button:disabled{opacity:.5}
 .mode{
- display:flex;gap:10px;margin-bottom:15px
+ display:grid;grid-template-columns:1fr 1fr;
+ gap:10px;margin-bottom:15px
 }
-.mode button{margin:0}
-.mode button.active{background:#637cff}
+.mode button{margin:0;min-height:55px}
+.mode button.active{background:#637cff;color:white}
 #result{
  white-space:pre-wrap;line-height:1.8;
  overflow-wrap:anywhere
 }
+#status{margin-bottom:12px;color:#aebbe0}
 footer{text-align:center;color:#9aa6cc;padding:20px}
 </style>
 </head>
@@ -68,8 +69,15 @@ footer{text-align:center;color:#9aa6cc;padding:20px}
 <div class="mode">
 <button id="questionMode" class="active"
 onclick="setMode('question')">✨ सवाल पूछें</button>
+
 <button id="chapterMode" class="secondary"
 onclick="setMode('chapter')">📖 अध्याय समझें</button>
+
+<button id="mcqMode" class="secondary"
+onclick="setMode('mcq')">🎯 MCQ अभ्यास</button>
+
+<button id="boardMode" class="secondary"
+onclick="setMode('board')">📝 बोर्ड प्रश्न</button>
 </div>
 
 <label>अपनी कक्षा चुनें</label>
@@ -117,10 +125,10 @@ placeholder="जैसे: 10 + 25 का उत्तर क्या है?">
 <label>अध्याय का नाम लिखें</label>
 <input id="chapter"
 placeholder="जैसे: प्रकाश - परावर्तन तथा अपवर्तन">
+</div>
 
-<p style="color:#aebbe0">
-AI शिक्षक अध्याय को आसान भाषा में समझाएगा।
-</p>
+<div id="modeInfo" style="color:#aebbe0;margin-top:12px">
+AI शिक्षक आपके सवाल का उत्तर देंगे।
 </div>
 
 <button class="primary" id="askBtn"
@@ -151,6 +159,20 @@ const FUNCTION_URL =
 
 let currentMode="question";
 
+const modeNames={
+ question:"✨ AI से उत्तर प्राप्त करें",
+ chapter:"📖 अध्याय समझाएँ",
+ mcq:"🎯 MCQ अभ्यास शुरू करें",
+ board:"📝 बोर्ड प्रश्न प्राप्त करें"
+};
+
+const modeInfo={
+ question:"अपना सवाल लिखें और AI शिक्षक से समाधान पाएँ।",
+ chapter:"अध्याय का परिचय, परिभाषाएँ, सूत्र और उदाहरण।",
+ mcq:"5 MCQ प्रश्न, चार विकल्प, सही उत्तर और व्याख्या।",
+ board:"5 महत्वपूर्ण परीक्षा प्रश्न और उनके उत्तर।"
+};
+
 function setMode(mode){
  currentMode=mode;
 
@@ -158,24 +180,61 @@ function setMode(mode){
  mode==="question"?"block":"none";
 
  document.getElementById("chapterBox").style.display=
- mode==="chapter"?"block":"none";
+ mode==="question"?"none":"block";
 
- document.getElementById("questionMode").className=
- mode==="question"?"active":"secondary";
+ ["question","chapter","mcq","board"].forEach(m=>{
+  document.getElementById(m+"Mode").className=
+  m===mode?"active":"secondary";
+ });
 
- document.getElementById("chapterMode").className=
- mode==="chapter"?"active":"secondary";
-
- document.getElementById("askBtn").textContent=
- mode==="question"?"✨ AI से उत्तर प्राप्त करें":"📖 अध्याय समझाएँ";
+ document.getElementById("askBtn").textContent=modeNames[mode];
+ document.getElementById("modeInfo").textContent=modeInfo[mode];
 }
 
 function formatAnswer(text){
- return text
+ return String(text||"")
  .replace(/\*\*(.*?)\*\*/g,"$1")
  .replace(/\*(.*?)\*/g,"$1")
  .replace(/#{1,6}\s/g,"")
  .replace(/```/g,"");
+}
+
+function makePrompt(className,subject,language,chapter){
+
+ const base=
+ `कक्षा ${className}, विषय ${subject}, अध्याय "${chapter}"। `+
+ `उत्तर ${language} भाषा में दीजिए। `+
+ `कक्षा के स्तर के अनुसार सरल और सही जानकारी दें। `;
+
+ if(currentMode==="chapter"){
+  return base+
+  `अध्याय को शिक्षक की तरह समझाइए। `+
+  `उत्तर में ये भाग रखें: `+
+  `1. अध्याय का परिचय `+
+  `2. मुख्य अवधारणाएँ और महत्वपूर्ण परिभाषाएँ `+
+  `3. जरूरी सूत्र और उनका अर्थ `+
+  `4. दो हल किए हुए उदाहरण `+
+  `5. एक सरल टेक्स्ट डायग्राम जहाँ संभव हो `+
+  `6. परीक्षा के महत्वपूर्ण बिंदु `+
+  `उत्तर व्यवस्थित और संक्षिप्त रखें।`;
+ }
+
+ if(currentMode==="mcq"){
+  return base+
+  `इस अध्याय से ठीक 5 MCQ बनाइए। `+
+  `हर प्रश्न में A, B, C, D चार विकल्प हों। `+
+  `हर प्रश्न के बाद सही उत्तर और छोटी व्याख्या दें। `+
+  `प्रश्न कक्षा के स्तर के हों। `+
+  `अध्याय का लंबा परिचय न दें।`;
+ }
+
+ if(currentMode==="board"){
+  return base+
+  `इस अध्याय से 5 महत्वपूर्ण परीक्षा/बोर्ड प्रश्न बनाइए। `+
+  `हर प्रश्न के नीचे पूरा लेकिन सरल उत्तर दीजिए। `+
+  `जहाँ जरूरी हो सूत्र, उदाहरण और चरण शामिल करें। `+
+  `अंत में परीक्षा के लिए महत्वपूर्ण टिप्स दें।`;
+ }
 }
 
 async function getAnswer(){
@@ -187,28 +246,21 @@ async function getAnswer(){
  let question="";
 
  if(currentMode==="question"){
- question=document.getElementById("question").value.trim();
+  question=document.getElementById("question").value.trim();
 
- if(!question){
- alert("कृपया अपना सवाल लिखें");
- return;
- }
-
+  if(!question){
+   alert("कृपया अपना सवाल लिखें");
+   return;
+  }
  }else{
- const chapter=document.getElementById("chapter").value.trim();
+  const chapter=document.getElementById("chapter").value.trim();
 
- if(!chapter){
- alert("कृपया अध्याय का नाम लिखें");
- return;
- }
+  if(!chapter){
+   alert("कृपया अध्याय का नाम लिखें");
+   return;
+  }
 
- question=
- `कक्षा ${className} ${subject} का अध्याय "${chapter}" `+
- `मुझे ${language} में शिक्षक की तरह समझाइए। `+
- `अध्याय का परिचय, मुख्य अवधारणाएँ, महत्वपूर्ण परिभाषाएँ, `+
- `सूत्र (जहाँ लागू हों), उदाहरण, परीक्षा के महत्वपूर्ण बिंदु `+
- `और अंत में 5 अभ्यास प्रश्न दीजिए। `+
- `कक्षा के स्तर के अनुसार समझाइए।`;
+  question=makePrompt(className,subject,language,chapter);
  }
 
  const btn=document.getElementById("askBtn");
@@ -222,32 +274,32 @@ async function getAnswer(){
  btn.disabled=true;
 
  try{
- const response=await fetch(FUNCTION_URL,{
- method:"POST",
- headers:{"Content-Type":"application/json"},
- body:JSON.stringify({
- question,
- className,
- subject,
- language
- })
- });
+  const response=await fetch(FUNCTION_URL,{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({
+    question,
+    className,
+    subject,
+    language
+   })
+  });
 
- const data=await response.json();
+  const data=await response.json();
 
- if(!response.ok){
- throw new Error(data.error||"उत्तर प्राप्त नहीं हुआ");
- }
+  if(!response.ok){
+   throw new Error(data.error||"उत्तर प्राप्त नहीं हुआ");
+  }
 
- status.textContent="✅ उत्तर सफलतापूर्वक प्राप्त हुआ!";
- result.textContent=formatAnswer(data.answer||"उत्तर उपलब्ध नहीं है।");
+  status.textContent="✅ उत्तर सफलतापूर्वक प्राप्त हुआ!";
+  result.textContent=formatAnswer(data.answer||"उत्तर उपलब्ध नहीं है।");
 
  }catch(error){
- status.textContent="❌ त्रुटि";
- result.textContent=error.message+
- "\nकृपया दोबारा प्रयास करें।";
+  status.textContent="❌ त्रुटि";
+  result.textContent=error.message+
+  "\nकृपया दोबारा प्रयास करें।";
  }finally{
- btn.disabled=false;
+  btn.disabled=false;
  }
 }
 </script>
