@@ -8,443 +8,248 @@
 
 <style>
 *{box-sizing:border-box}
-
-:root{
-  --bg:#080d1b;
-  --card:#111a2e;
-  --card2:#17223b;
-  --text:#f3f6ff;
-  --muted:#aab7d3;
-  --primary:#6d8cff;
-  --secondary:#9b6dff;
-  --green:#20c997;
-  --border:#283653;
-}
-
 body{
-  margin:0;
-  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
-  background:radial-gradient(circle at top,#17264a,#080d1b 60%);
-  color:var(--text);
-  min-height:100vh;
+ margin:0;font-family:Arial,sans-serif;
+ background:#0b1020;color:#fff;
+ padding:18px
 }
-
-header{
-  text-align:center;
-  padding:28px 15px 20px;
-}
-
-.logo{
-  font-size:42px;
-  margin-bottom:8px;
-}
-
-header h1{
-  margin:0;
-  font-size:30px;
-  font-weight:800;
-  background:linear-gradient(90deg,#79a5ff,#c09aff);
-  -webkit-background-clip:text;
-  color:transparent;
-}
-
-header p{
-  margin:8px 0;
-  color:var(--muted);
-}
-
-.tagline{
-  display:inline-block;
-  background:#182545;
-  border:1px solid #344b79;
-  padding:7px 14px;
-  border-radius:30px;
-  font-size:13px;
-  margin-top:8px;
-}
-
-.container{
-  max-width:760px;
-  margin:auto;
-  padding:15px;
-}
-
+.container{max-width:650px;margin:auto}
+header{text-align:center;padding:20px 0}
+.logo{font-size:40px}
+h1{color:#8b9cff;margin:8px 0}
+.subtitle{color:#b8c2e8}
 .card{
-  background:rgba(17,26,46,.96);
-  border:1px solid var(--border);
-  border-radius:20px;
-  padding:22px;
-  margin-bottom:18px;
-  box-shadow:0 12px 35px rgba(0,0,0,.18);
+ background:#151d35;padding:20px;
+ border-radius:18px;margin:15px 0;
+ border:1px solid #293556
 }
-
-.card h2{
-  margin:0 0 18px;
-  font-size:21px;
-}
-
-label{
-  display:block;
-  font-size:14px;
-  color:#c7d4f0;
-  margin:14px 0 8px;
-}
-
+label{display:block;margin:15px 0 8px;font-weight:bold}
 select,input,textarea{
-  width:100%;
-  padding:14px;
-  border-radius:12px;
-  border:1px solid #344462;
-  background:#0b1325;
-  color:white;
-  font-size:16px;
-  outline:none;
+ width:100%;padding:13px;border-radius:10px;
+ border:1px solid #354365;background:#0e1529;
+ color:white;font-size:16px
 }
-
-select:focus,textarea:focus{
-  border-color:var(--primary);
-  box-shadow:0 0 0 3px rgba(109,140,255,.15);
-}
-
-textarea{
-  min-height:125px;
-  resize:vertical;
-  line-height:1.6;
-}
-
+textarea{min-height:120px;resize:vertical}
 button{
-  width:100%;
-  border:none;
-  border-radius:13px;
-  padding:15px;
-  margin-top:18px;
-  font-size:17px;
-  font-weight:700;
-  cursor:pointer;
-  color:white;
-  background:linear-gradient(100deg,#557cff,#9a65ff);
-  box-shadow:0 8px 22px rgba(91,111,255,.25);
+ width:100%;padding:15px;margin-top:15px;
+ border:0;border-radius:12px;font-size:17px;
+ font-weight:bold;cursor:pointer
 }
-
-button:disabled{
-  opacity:.65;
-  cursor:not-allowed;
+.primary{background:#637cff;color:white}
+.secondary{background:#26365b;color:white}
+button:disabled{opacity:.5}
+.mode{
+ display:flex;gap:10px;margin-bottom:15px
 }
-
-.status{
-  display:none;
-  margin-top:15px;
-  padding:13px;
-  border-radius:12px;
-  text-align:center;
-  background:#182545;
-  color:#c8d8ff;
-  font-size:14px;
+.mode button{margin:0}
+.mode button.active{background:#637cff}
+#result{
+ white-space:pre-wrap;line-height:1.8;
+ overflow-wrap:anywhere
 }
-
-.error{
-  background:#351b29;
-  color:#ffb5c4;
-  border:1px solid #713247;
-}
-
-.answer{
-  display:none;
-  background:#0c1426;
-  border:1px solid #2d405f;
-  padding:18px;
-  border-radius:14px;
-  line-height:1.85;
-  overflow-wrap:anywhere;
-  font-size:16px;
-}
-
-.answer h1,.answer h2,.answer h3{
-  color:#9db8ff;
-  line-height:1.4;
-}
-
-.answer strong{
-  color:#d6e2ff;
-}
-
-.answer code{
-  background:#202d48;
-  padding:3px 6px;
-  border-radius:5px;
-}
-
-.answer pre{
-  white-space:pre-wrap;
-  background:#17223b;
-  padding:12px;
-  border-radius:10px;
-  overflow:auto;
-}
-
-.answer ul,.answer ol{
-  padding-left:23px;
-}
-
-.features{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-}
-
-.feature{
-  background:#111a2e;
-  border:1px solid var(--border);
-  padding:16px 8px;
-  border-radius:15px;
-  text-align:center;
-}
-
-.feature .icon{
-  font-size:25px;
-}
-
-.feature h3{
-  font-size:14px;
-  margin:8px 0 5px;
-}
-
-.feature p{
-  font-size:12px;
-  color:var(--muted);
-  margin:0;
-}
-
-footer{
-  text-align:center;
-  color:#8998b8;
-  padding:25px 10px;
-  font-size:13px;
-}
-
-@media(max-width:480px){
-  header{padding-top:22px}
-  header h1{font-size:27px}
-  .card{padding:17px}
-  .features{grid-template-columns:1fr}
-  .feature{display:flex;align-items:center;gap:12px;text-align:left}
-  .feature p{font-size:13px}
-}
+footer{text-align:center;color:#9aa6cc;padding:20px}
 </style>
 </head>
 
 <body>
-
-<header>
-  <div class="logo">🎓</div>
-  <h1>AI Smart Study</h1>
-  <p>सीखें • समझें • आगे बढ़ें</p>
-  <div class="tagline">हर सवाल का आसान समाधान</div>
-  <p>अपना सवाल पूछें और AI शिक्षक से समझें।</p>
-  <p>कक्षा 1 से 12 तक के विद्यार्थियों के लिए।</p>
-</header>
-
 <div class="container">
 
-  <section class="card">
-    <h2>📚 AI शिक्षक से पूछें</h2>
+<header>
+<div class="logo">🎓</div>
+<h1>AI Smart Study</h1>
+<div class="subtitle">सीखें • समझें • आगे बढ़ें</div>
+<p>हर सवाल का आसान समाधान</p>
+<p>कक्षा 1 से 12 तक के विद्यार्थियों के लिए।</p>
+</header>
 
-    <label for="className">अपनी कक्षा चुनें</label>
-    <select id="className">
-      <option value="कक्षा 1">कक्षा 1</option>
-      <option value="कक्षा 2">कक्षा 2</option>
-      <option value="कक्षा 3">कक्षा 3</option>
-      <option value="कक्षा 4">कक्षा 4</option>
-      <option value="कक्षा 5">कक्षा 5</option>
-      <option value="कक्षा 6">कक्षा 6</option>
-      <option value="कक्षा 7">कक्षा 7</option>
-      <option value="कक्षा 8">कक्षा 8</option>
-      <option value="कक्षा 9">कक्षा 9</option>
-      <option value="कक्षा 10" selected>कक्षा 10</option>
-      <option value="कक्षा 11">कक्षा 11</option>
-      <option value="कक्षा 12">कक्षा 12</option>
-    </select>
+<div class="card">
+<h2>📚 AI शिक्षक से सीखें</h2>
 
-    <label for="subject">विषय चुनें</label>
-    <select id="subject">
-      <option value="सामान्य">सामान्य ज्ञान</option>
-      <option value="गणित (Maths)">गणित (Maths)</option>
-      <option value="विज्ञान (Science)" selected>विज्ञान (Science)</option>
-      <option value="हिंदी (Hindi)">हिंदी (Hindi)</option>
-      <option value="English">English</option>
-      <option value="सामाजिक विज्ञान (Social Science)">सामाजिक विज्ञान</option>
-      <option value="इतिहास (History)">इतिहास</option>
-      <option value="भूगोल (Geography)">भूगोल</option>
-      <option value="कंप्यूटर (Computer)">कंप्यूटर</option>
-    </select>
-
-    <label for="language">उत्तर की भाषा</label>
-    <select id="language">
-      <option value="Hindi" selected>Hindi</option>
-      <option value="English">English</option>
-    </select>
-
-    <label for="question">अपना सवाल लिखें</label>
-    <textarea id="question" placeholder="जैसे: प्रकाश संश्लेषण क्या है?"></textarea>
-
-    <button id="askBtn" onclick="askAI()">
-      ✨ AI से उत्तर प्राप्त करें
-    </button>
-
-    <div id="status" class="status"></div>
-  </section>
-
-  <section class="card">
-    <h2>📘 आपका AI उत्तर</h2>
-    <div id="answer" class="answer"></div>
-  </section>
-
-  <section class="features">
-    <div class="feature">
-      <div class="icon">📘</div>
-      <div>
-        <h3>Step-by-Step समाधान</h3>
-        <p>कठिन सवाल आसान भाषा में।</p>
-      </div>
-    </div>
-
-    <div class="feature">
-      <div class="icon">🌐</div>
-      <div>
-        <h3>Hindi और English</h3>
-        <p>अपनी पसंद की भाषा में पढ़ें।</p>
-      </div>
-    </div>
-
-    <div class="feature">
-      <div class="icon">🎓</div>
-      <div>
-        <h3>कक्षा 1–12</h3>
-        <p>स्कूल के विद्यार्थियों के लिए।</p>
-      </div>
-    </div>
-  </section>
-
+<div class="mode">
+<button id="questionMode" class="active"
+onclick="setMode('question')">✨ सवाल पूछें</button>
+<button id="chapterMode" class="secondary"
+onclick="setMode('chapter')">📖 अध्याय समझें</button>
 </div>
 
-<footer>
-  AI Smart Study • सीखना अब आसान
-</footer>
+<label>अपनी कक्षा चुनें</label>
+<select id="className">
+<option value="1">कक्षा 1</option>
+<option value="2">कक्षा 2</option>
+<option value="3">कक्षा 3</option>
+<option value="4">कक्षा 4</option>
+<option value="5">कक्षा 5</option>
+<option value="6">कक्षा 6</option>
+<option value="7">कक्षा 7</option>
+<option value="8">कक्षा 8</option>
+<option value="9">कक्षा 9</option>
+<option value="10" selected>कक्षा 10</option>
+<option value="11">कक्षा 11</option>
+<option value="12">कक्षा 12</option>
+</select>
+
+<label>विषय चुनें</label>
+<select id="subject">
+<option value="Maths">गणित (Maths)</option>
+<option value="Science">विज्ञान (Science)</option>
+<option value="Hindi">हिंदी</option>
+<option value="English">English</option>
+<option value="Social Science">सामाजिक विज्ञान</option>
+<option value="Physics">भौतिक विज्ञान</option>
+<option value="Chemistry">रसायन विज्ञान</option>
+<option value="Biology">जीव विज्ञान</option>
+<option value="General">अन्य विषय</option>
+</select>
+
+<label>उत्तर की भाषा</label>
+<select id="language">
+<option value="Hindi">Hindi</option>
+<option value="English">English</option>
+</select>
+
+<div id="questionBox">
+<label>अपना सवाल लिखें</label>
+<textarea id="question"
+placeholder="जैसे: 10 + 25 का उत्तर क्या है?"></textarea>
+</div>
+
+<div id="chapterBox" style="display:none">
+<label>अध्याय का नाम लिखें</label>
+<input id="chapter"
+placeholder="जैसे: प्रकाश - परावर्तन तथा अपवर्तन">
+
+<p style="color:#aebbe0">
+AI शिक्षक अध्याय को आसान भाषा में समझाएगा।
+</p>
+</div>
+
+<button class="primary" id="askBtn"
+onclick="getAnswer()">✨ AI से उत्तर प्राप्त करें</button>
+</div>
+
+<div class="card" id="answerCard" style="display:none">
+<h2>📘 आपका AI उत्तर</h2>
+<div id="status"></div>
+<div id="result"></div>
+</div>
+
+<div class="card">
+<h3>📘 Step-by-Step समाधान</h3>
+<p>कठिन सवाल आसान भाषा में।</p>
+<h3>🌐 Hindi और English</h3>
+<p>अपनी पसंद की भाषा में पढ़ें।</p>
+<h3>🎓 कक्षा 1–12</h3>
+<p>स्कूल के विद्यार्थियों के लिए।</p>
+</div>
+
+<footer>AI Smart Study • सीखना अब आसान</footer>
+</div>
 
 <script>
 const FUNCTION_URL =
 "https://rhahfromeeouetxlvmom.supabase.co/functions/v1/smart-service";
 
-const askBtn = document.getElementById("askBtn");
-const statusBox = document.getElementById("status");
-const answerBox = document.getElementById("answer");
+let currentMode="question";
 
-function showStatus(message,isError=false){
-  statusBox.style.display="block";
-  statusBox.className="status"+(isError?" error":"");
-  statusBox.textContent=message;
+function setMode(mode){
+ currentMode=mode;
+
+ document.getElementById("questionBox").style.display=
+ mode==="question"?"block":"none";
+
+ document.getElementById("chapterBox").style.display=
+ mode==="chapter"?"block":"none";
+
+ document.getElementById("questionMode").className=
+ mode==="question"?"active":"secondary";
+
+ document.getElementById("chapterMode").className=
+ mode==="chapter"?"active":"secondary";
+
+ document.getElementById("askBtn").textContent=
+ mode==="question"?"✨ AI से उत्तर प्राप्त करें":"📖 अध्याय समझाएँ";
 }
 
-function escapeHTML(text){
-  return text.replace(/[&<>"']/g,function(char){
-    return {
-      "&":"&amp;",
-      "<":"&lt;",
-      ">":"&gt;",
-      '"':"&quot;",
-      "'":"&#39;"
-    }[char];
-  });
-}
-
-// सरल Markdown formatting
 function formatAnswer(text){
-  let html=escapeHTML(text);
-
-  html=html.replace(/\$\$([\s\S]*?)\$\$/g,"<pre>$1</pre>");
-  html=html.replace(/\$([^$\n]+)\$/g,"<code>$1</code>");
-  html=html.replace(/^### (.*)$/gm,"<h3>$1</h3>");
-  html=html.replace(/^## (.*)$/gm,"<h2>$1</h2>");
-  html=html.replace(/^# (.*)$/gm,"<h1>$1</h1>");
-  html=html.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>");
-  html=html.replace(/\*(.*?)\*/g,"<em>$1</em>");
-  html=html.replace(/^\s*[-*] (.*)$/gm,"• $1");
-  html=html.replace(/^\s*(\d+)\. (.*)$/gm,"$1. $2");
-  html=html.replace(/\n/g,"<br>");
-
-  return html;
+ return text
+ .replace(/\*\*(.*?)\*\*/g,"$1")
+ .replace(/\*(.*?)\*/g,"$1")
+ .replace(/#{1,6}\s/g,"")
+ .replace(/```/g,"");
 }
 
-async function askAI(){
-  const question=document.getElementById("question").value.trim();
-  const className=document.getElementById("className").value;
-  const subject=document.getElementById("subject").value;
-  const language=document.getElementById("language").value;
+async function getAnswer(){
 
-  if(!question){
-    showStatus("⚠️ पहले अपना सवाल लिखें।",true);
-    return;
-  }
+ const className=document.getElementById("className").value;
+ const subject=document.getElementById("subject").value;
+ const language=document.getElementById("language").value;
 
-  askBtn.disabled=true;
-  askBtn.textContent="⏳ AI शिक्षक सोच रहे हैं...";
-  answerBox.style.display="none";
-  answerBox.innerHTML="";
-  showStatus("कृपया प्रतीक्षा करें... AI उत्तर तैयार कर रहा है।");
+ let question="";
 
-  try{
-    const response=await fetch(FUNCTION_URL,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        question,
-        className,
-        subject,
-        language
-      })
-    });
+ if(currentMode==="question"){
+ question=document.getElementById("question").value.trim();
 
-    const raw=await response.text();
-    let data;
+ if(!question){
+ alert("कृपया अपना सवाल लिखें");
+ return;
+ }
 
-    try{
-      data=JSON.parse(raw);
-    }catch{
-      throw new Error("Server से सही उत्तर नहीं मिला।");
-    }
+ }else{
+ const chapter=document.getElementById("chapter").value.trim();
 
-    if(!response.ok){
-      throw new Error(
-        data.error ||
-        data.message ||
-        "HTTP Error "+response.status
-      );
-    }
+ if(!chapter){
+ alert("कृपया अध्याय का नाम लिखें");
+ return;
+ }
 
-    const answer=
-      data.answer ||
-      data.text ||
-      data.output_text ||
-      "";
+ question=
+ `कक्षा ${className} ${subject} का अध्याय "${chapter}" `+
+ `मुझे ${language} में शिक्षक की तरह समझाइए। `+
+ `अध्याय का परिचय, मुख्य अवधारणाएँ, महत्वपूर्ण परिभाषाएँ, `+
+ `सूत्र (जहाँ लागू हों), उदाहरण, परीक्षा के महत्वपूर्ण बिंदु `+
+ `और अंत में 5 अभ्यास प्रश्न दीजिए। `+
+ `कक्षा के स्तर के अनुसार समझाइए।`;
+ }
 
-    if(!answer){
-      throw new Error("AI ने खाली उत्तर दिया।");
-    }
+ const btn=document.getElementById("askBtn");
+ const card=document.getElementById("answerCard");
+ const status=document.getElementById("status");
+ const result=document.getElementById("result");
 
-    answerBox.innerHTML=formatAnswer(answer);
-    answerBox.style.display="block";
-    showStatus("✅ उत्तर सफलतापूर्वक प्राप्त हुआ!");
+ card.style.display="block";
+ status.textContent="⏳ AI शिक्षक उत्तर तैयार कर रहे हैं...";
+ result.textContent="";
+ btn.disabled=true;
 
-  }catch(error){
-    showStatus("❌ उत्तर प्राप्त नहीं हुआ: "+error.message,true);
-  }finally{
-    askBtn.disabled=false;
-    askBtn.textContent="✨ AI से उत्तर प्राप्त करें";
-  }
+ try{
+ const response=await fetch(FUNCTION_URL,{
+ method:"POST",
+ headers:{"Content-Type":"application/json"},
+ body:JSON.stringify({
+ question,
+ className,
+ subject,
+ language
+ })
+ });
+
+ const data=await response.json();
+
+ if(!response.ok){
+ throw new Error(data.error||"उत्तर प्राप्त नहीं हुआ");
+ }
+
+ status.textContent="✅ उत्तर सफलतापूर्वक प्राप्त हुआ!";
+ result.textContent=formatAnswer(data.answer||"उत्तर उपलब्ध नहीं है।");
+
+ }catch(error){
+ status.textContent="❌ त्रुटि";
+ result.textContent=error.message+
+ "\nकृपया दोबारा प्रयास करें।";
+ }finally{
+ btn.disabled=false;
+ }
 }
 </script>
-
 </body>
 </html>
