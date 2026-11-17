@@ -365,11 +365,16 @@ return Array.isArray(data)?data:[];
 }catch(error){
 return [];
 }
+
+/* रिकॉर्ड का क्रम: सबसे नया सबसे पहले */
 }
 
 function saveProgress(record){
 const history=getProgress();
-history.push(record);
+
+/* नया रिकॉर्ड सबसे ऊपर सेव करें */
+history.unshift(record);
+
 localStorage.setItem(STORAGE_KEY,JSON.stringify(history));
 renderProgress();
 }
@@ -546,7 +551,7 @@ details.textContent=
 "\nसही उत्तर: "+correct+
 "\nगलत उत्तर: "+wrong+
 "\nऔसत स्कोर: "+average+"%\n\n"+
-history.slice(-10).reverse().map((item,index)=>{
+history.slice(0,10).map((item,index)=>{
 const record=normalizeRecord(item);
 return (
 (index+1)+". "+record.subject+
@@ -575,8 +580,8 @@ output.textContent="✨ आपकी पढ़ाई का विश्ले�
 
 try{
 
-/* सबसे नया टेस्ट सबसे ऊपर */
-const recent=history.slice(-20).reverse().map(normalizeRecord);
+/* सबसे नया टेस्ट पहले से ही index 0 पर है */
+const recent=history.slice(0,20).map(normalizeRecord);
 
 /* सभी आँकड़े वेबसाइट खुद निकालेगी */
 const total=recent.reduce((sum,item)=>sum+item.total,0);
@@ -634,8 +639,8 @@ item.subject+" - "+item.chapter+
 /* AI केवल पढ़ाई की सलाह देगा */
 const prompt=
 "यह विद्यार्थी की पढ़ाई सुधारने वाली स्टडी रिपोर्ट है। "+
-"आप एक अनुभवी और प्रोत्साहित करने वाले स्कूल शिक्षक हैं。\n"+
-"विद्यार्थी के रिकॉर्ड का उपयोग करके केवल पढ़ाई सुधारने की सलाह दें。\n\n"+
+"आप एक अनुभवी और प्रोत्साहित करने वाले स्कूल शिक्षक हैं।\n"+
+"विद्यार्थी के रिकॉर्ड का उपयोग करके केवल पढ़ाई सुधारने की सलाह दें।\n\n"+
 "सटीक रिकॉर्ड:\n"+
 "कुल टेस्ट: "+recent.length+
 "\nकुल प्रश्न: "+total+
@@ -658,7 +663,6 @@ const prompt=
 "\n7. सरल भाषा में विद्यार्थी का उत्साह बढ़ाएँ।"+
 "\n8. रिकॉर्ड में जो जानकारी नहीं है, उसके बारे में अनुमान न लगाएँ।";
 
-/* अब recent[0] सबसे नया टेस्ट है */
 const latest=recent[0];
 const settings=getSettings();
 
