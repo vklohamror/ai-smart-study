@@ -641,6 +641,49 @@ async function getBoardQuestions(){
  }
 }
 
+/* अध्याय के पुराने गलत नाम साफ करना */
+function cleanChapterName(value){
+
+ let name=String(value||"").trim();
+
+ /* पुराने MCQ निर्देश और उसके बाद का टेक्स्ट हटाएँ */
+ name=name.replace(
+  /\s*(?:पर\s*)?(?:ठीक\s*5\s*MCQ|चार\s*विकल्प|MCQ)\b.*$/i,
+  ""
+ );
+
+ name=name.replace(
+  /\s*(?:बहुविकल्पीय प्रश्न बनाइए|प्रश्न बनाइए|अभ्यास बनाइए).*$/i,
+  ""
+ );
+
+ name=name.replace(/[।.,;:]+$/g,"").trim();
+
+ return name||"सामान्य अभ्यास";
+}
+
+/* रिकॉर्ड के सही आँकड़े तैयार करना */
+function normalizeRecord(item){
+
+ const total=Math.max(0,Number(item.total)||0);
+ const correct=Math.max(0,Number(item.correct)||0);
+ const wrong=Math.max(0,total-correct);
+
+ const percentage=total?
+  Math.round(correct/total*100):0;
+
+ return {
+  date:item.date||"",
+  className:item.className||"",
+  subject:item.subject||"अन्य",
+  chapter:cleanChapterName(item.chapter),
+  total:total,
+  correct:correct,
+  wrong:wrong,
+  percentage:percentage
+ };
+}
+
 /* पढ़ाई की रिपोर्ट दिखाना */
 function renderProgress(){
 
@@ -649,15 +692,15 @@ function renderProgress(){
  const totalTests=history.length;
 
  const totalQuestions=history.reduce(
-  (sum,item)=>sum+Number(item.total||0),0
+  (sum,item)=>sum+(Number(item.total)||0),0
  );
 
  const correct=history.reduce(
-  (sum,item)=>sum+Number(item.correct||0),0
+  (sum,item)=>sum+(Number(item.correct)||0),0
  );
 
  const wrong=history.reduce(
-  (sum,item)=>sum+Number(item.wrong||0),0
+  (sum,item)=>sum+(Number(item.total)||0)-(Number(item.correct)||0),0
  );
 
  const average=totalQuestions?
@@ -683,24 +726,15 @@ function renderProgress(){
   "\nसही उत्तर: "+correct+
   "\nगलत उत्तर: "+wrong+
   "\nऔसत स्कोर: "+average+"%\n\n"+
-  history.slice(-10).reverse().map((item,index)=>
-   (index+1)+". "+(item.subject||"विषय")+
-   " | "+(item.chapter||"अध्याय")+
-   " | "+item.correct+"/"+item.total+
-   " | "+item.percentage+"%"
-  ).join("\n");
-
-}
-
-/* पुराने अध्याय नाम से MCQ ट्रिगर हटाना */
-function cleanChapterName(value){
-
- return String(value||"")
-  .replace(/ठीक\s*5\s*MCQ/gi,"अभ्यास")
-  .replace(/चार\s*विकल्प/gi,"बहुविकल्पीय अभ्यास")
-  .replace(/MCQ/gi,"अभ्यास प्रश्न")
-  .replace(/बहुविकल्पीय प्रश्न बनाइए/gi,"अभ्यास")
-  .trim();
+  history.slice(-10).reverse().map((item,index)=>{
+   const record=normalizeRecord(item);
+   return (
+    (index+1)+". "+record.subject+
+    " | "+record.chapter+
+    " | "+record.correct+"/"+record.total+
+    " | "+record.percentage+"%"
+   );
+  }).join("\n");
 
 }
 
@@ -724,91 +758,185 @@ async function getStudyAdvice(){
  }
 
  setLoading(button,"AI रिपोर्ट बना रहा है...");
-
  output.textContent="✨ आपकी पढ़ाई का विश्लेषण किया जा रहा है...";
-
- const recent=history.slice(-20);
-
- const total=recent.reduce(
-  (sum,item)=>sum+Number(item.total||0),0
- );
-
- const correct=recent.reduce(
-  (sum,item)=>sum+Number(item.correct||0),0
- );
-
- const wrong=recent.reduce(
-  (sum,item)=>sum+Number(item.wrong||0),0
- );
-
- /* अध्याय के नाम साफ करके भेजना */
- const summary=recent.map((item,index)=>{
-
-  const chapter=cleanChapterName(item.chapter);
-
-  return (
-   (index+1)+
-   ". विषय: "+(item.subject||"अन्य")+
-   ", अध्याय: "+(chapter||"नाम नहीं दिया")+
-   ", कुल प्रश्न: "+Number(item.total||0)+
-   ", सही: "+Number(item.correct||0)+
-   ", गलत: "+Number(item.wrong||0)+
-   ", स्कोर: "+Number(item.percentage||0)+"%"
-  );
-
- }).join("\n");
-
- const prompt=
-  "यह विद्यार्थी की पढ़ाई सुधारने वाली स्टडी रिपोर्ट है। "+
-  "आप एक अनुभवी और प्रोत्साहित करने वाले स्कूल शिक्षक हैं। "+
-  "विद्यार्थी के दिए गए परीक्षा रिकॉर्ड का विश्लेषण करें।\n"+
-  "कुल टेस्ट: "+recent.length+
-  "\nकुल प्रश्न: "+total+
-  "\nसही उत्तर: "+correct+
-  "\nगलत उत्तर: "+wrong+
-  "\nऔसत प्रदर्शन: "+
-  Math.round(correct/Math.max(total,1)*100)+"%\n"+
-  "परीक्षा विवरण:\n"+summary+
-  "\nसरल भाषा में इन चार बातों पर सलाह दें:"+
-  "\n1. विद्यार्थी की अच्छी बातें"+
-  "\n2. कमजोर विषय और अध्याय"+
-  "\n3. अगले 7 दिनों की पढ़ाई योजना"+
-  "\n4. रोजाना अभ्यास के लिए प्रश्नों की संख्या"+
-  "\nकेवल दिए गए रिकॉर्ड के आधार पर जवाब दें।"+
-  " कोई तथ्य न गढ़ें। विद्यार्थी का उत्साह बढ़ाएँ।";
 
  try{
 
+  /* अंतिम 20 टेस्ट को पुराने से नए क्रम में रखना */
+  const recent=history.slice(-20).map(normalizeRecord);
+
+  /* सभी आँकड़े वेबसाइट खुद निकालेगी */
+  const total=recent.reduce((sum,item)=>sum+item.total,0);
+  const correct=recent.reduce((sum,item)=>sum+item.correct,0);
+  const wrong=recent.reduce((sum,item)=>sum+item.wrong,0);
+
+  const average=total?
+   Math.round(correct/total*100):0;
+
+  /* अध्याय के अनुसार कुल प्रदर्शन */
+  const chapterStats={};
+
+  recent.forEach(item=>{
+
+   const key=item.subject+"|||"+item.chapter;
+
+   if(!chapterStats[key]){
+    chapterStats[key]={
+     subject:item.subject,
+     chapter:item.chapter,
+     total:0,
+     correct:0,
+     wrong:0
+    };
+   }
+
+   chapterStats[key].total+=item.total;
+   chapterStats[key].correct+=item.correct;
+   chapterStats[key].wrong+=item.wrong;
+
+  });
+
+  const chapters=Object.values(chapterStats).map(item=>({
+
+   ...item,
+   percentage:item.total?
+    Math.round(item.correct/item.total*100):0
+
+  }));
+
+  /* सबसे अच्छा और कमजोर अध्याय */
+  const sorted=[...chapters].sort(
+   (a,b)=>b.percentage-a.percentage
+  );
+
+  const best=sorted.length?sorted[0]:null;
+  const weakest=sorted.length?sorted[sorted.length-1]:null;
+
+  /* सही टेस्ट रिकॉर्ड वेबसाइट पर ही तैयार करना */
+  const testLines=recent.map((item,index)=>{
+
+   return (
+    (index+1)+". "+item.subject+" - "+item.chapter+
+    " | "+item.correct+"/"+item.total+
+    " | "+item.percentage+"%"
+   );
+
+  }).join("\n");
+
+  const chapterLines=chapters.map(item=>{
+
+   return (
+    item.subject+" - "+item.chapter+
+    ": "+item.correct+"/"+item.total+
+    " सही, "+item.percentage+"%"
+   );
+
+  }).join("\n");
+
+  /* AI को केवल सलाह देने के लिए डेटा */
+  const prompt=
+   "यह विद्यार्थी की पढ़ाई सुधारने वाली स्टडी रिपोर्ट है। "+
+   "आप एक अनुभवी और प्रोत्साहित करने वाले स्कूल शिक्षक हैं।\n"+
+   "विद्यार्थी के रिकॉर्ड का उपयोग करके केवल पढ़ाई सुधारने की सलाह दें।\n\n"+
+   "सटीक रिकॉर्ड:\n"+
+   "कुल टेस्ट: "+recent.length+
+   "\nकुल प्रश्न: "+total+
+   "\nसही उत्तर: "+correct+
+   "\nगलत उत्तर: "+wrong+
+   "\nऔसत प्रदर्शन: "+average+"%\n"+
+   "टेस्ट का क्रमवार डेटा:\n"+testLines+
+   "\nअध्याय के अनुसार डेटा:\n"+chapterLines+
+   "\nसबसे अच्छा अध्याय: "+
+   (best?best.chapter+" ("+best.percentage+"%)":"उपलब्ध नहीं")+
+   "\nसबसे कमजोर अध्याय: "+
+   (weakest?weakest.chapter+" ("+weakest.percentage+"%)":"उपलब्ध नहीं")+
+   "\n\nमहत्वपूर्ण निर्देश:"+
+   "\n1. ऊपर दिए गए आँकड़ों को बदलना या दोबारा गणना करके अलग परिणाम देना मना है।"+
+   "\n2. टेस्ट का क्रम और प्रतिशत दोबारा बताने की जरूरत नहीं है।"+
+   "\n3. केवल विद्यार्थी को सुधारने के व्यावहारिक सुझाव दें।"+
+   "\n4. कमजोर विषय और अध्याय में सुधार के तरीके बताएँ।"+
+   "\n5. अगले 7 दिनों की पढ़ाई योजना दें।"+
+   "\n6. रोजाना कितने प्रश्न हल करने चाहिए, यह बताएँ।"+
+   "\n7. सरल भाषा में विद्यार्थी का उत्साह बढ़ाएँ।"+
+   "\n8. रिकॉर्ड में जो जानकारी नहीं है, उसके बारे में अनुमान न लगाएँ।";
+
   const latest=recent[recent.length-1];
-  const s=getSettings();
+  const settings=getSettings();
 
   const data=await callAI(
    prompt,
-   latest.className||s.className,
-   latest.subject||s.subject,
-   s.language
+   latest.className||settings.className,
+   latest.subject||settings.subject,
+   settings.language
   );
 
-  console.log("AI STUDY REPORT RESPONSE:",data);
+  let aiAdvice="";
 
-  if(typeof data.answer!=="string"||!data.answer.trim()){
-
-   output.textContent=
-    "सर्वर से प्राप्त तकनीकी जानकारी:\n\n"+
-    JSON.stringify(data,null,2);
-
-   return;
-
+  if(typeof data.answer==="string"&&data.answer.trim()){
+   aiAdvice=data.answer.trim();
+  }else{
+   aiAdvice="AI से सलाह प्राप्त नहीं हो सकी। ऊपर दिए गए वास्तविक आँकड़े सुरक्षित हैं।";
   }
 
-  output.textContent=data.answer.trim();
+  /* वास्तविक रिपोर्ट वेबसाइट तैयार करेगी */
+  let report=
+   "📊 आपकी सटीक पढ़ाई रिपोर्ट\n"+
+   "━━━━━━━━━━━━━━━━━━━━\n"+
+   "कुल टेस्ट: "+recent.length+
+   "\nकुल प्रश्न: "+total+
+   "\nसही उत्तर: "+correct+
+   "\nगलत उत्तर: "+wrong+
+   "\nऔसत स्कोर: "+average+"%\n\n";
+
+  report+="📚 टेस्ट का सही क्रम\n";
+
+  recent.forEach((item,index)=>{
+
+   report+=
+    "\n"+(index+1)+". "+item.subject+
+    "\n   अध्याय: "+item.chapter+
+    "\n   सही उत्तर: "+item.correct+"/"+item.total+
+    "\n   स्कोर: "+item.percentage+"%\n";
+
+  });
+
+  report+="\n📖 अध्याय के अनुसार प्रदर्शन\n";
+
+  chapters.forEach(item=>{
+
+   report+=
+    "\n"+item.subject+" - "+item.chapter+
+    "\nसही: "+item.correct+"/"+item.total+
+    "\nस्कोर: "+item.percentage+"%\n";
+
+  });
+
+  if(best){
+   report+=
+    "\n🏆 सबसे अच्छा प्रदर्शन: "+
+    best.chapter+" ("+best.percentage+"%)\n";
+  }
+
+  if(weakest){
+   report+=
+    "\n📌 अधिक अभ्यास की जरूरत: "+
+    weakest.chapter+" ("+weakest.percentage+"%)\n";
+  }
+
+  report+=
+   "\n━━━━━━━━━━━━━━━━━━━━\n"+
+   "🤖 AI शिक्षक की सलाह\n\n"+
+   aiAdvice;
+
+  output.textContent=report;
 
  }catch(error){
 
   console.error("AI Study Report Error:",error);
 
   output.textContent=
-   "AI रिपोर्ट नहीं बन पाई: "+error.message;
+   "AI सलाह प्राप्त नहीं हो सकी: "+error.message+
+   "\n\nआपके टेस्ट रिकॉर्ड सुरक्षित हैं।";
 
  }finally{
 
