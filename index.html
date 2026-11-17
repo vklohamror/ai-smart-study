@@ -63,7 +63,6 @@ footer{text-align:center;color:#9aa6cc;padding:20px}
 
 <div class="card">
 <h2>📚 AI शिक्षक से सीखें</h2>
-
 <div class="mode">
 <button id="questionMode" class="active" onclick="setMode('question')">✨ सवाल पूछें</button>
 <button id="chapterMode" class="secondary" onclick="setMode('chapter')">📖 अध्याय समझें</button>
@@ -170,7 +169,7 @@ footer{text-align:center;color:#9aa6cc;padding:20px}
 </div>
 
 <script>
-const API_URL = "https://rhahfromeeouetxlvmom.supabase.co/functions/v1/smart-service";
+const API_URL="https://rhahfromeeouetxlvmom.supabase.co/functions/v1/smart-service";
 
 let currentMode="question";
 let currentQuiz=[];
@@ -181,22 +180,15 @@ let quizSubmitted=false;
 
 function escapeHTML(value){
  return String(value??"").replace(/[&<>"']/g,c=>({
-  "&":"&amp;",
-  "<":"&lt;",
-  ">":"&gt;",
-  '"':"&quot;",
-  "'":"&#39;"
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
  }[c]));
 }
 
 function setMode(mode){
  currentMode=mode;
-
  ["question","chapter","mcq","board"].forEach(item=>{
-  document.getElementById(item+"Mode").className=
-   item===mode?"active":"secondary";
+  document.getElementById(item+"Mode").className=item===mode?"active":"secondary";
  });
-
  const label=document.getElementById("inputLabel");
  const input=document.getElementById("question");
  const info=document.getElementById("modeInfo");
@@ -205,18 +197,15 @@ function setMode(mode){
   label.textContent="अध्याय का नाम लिखें";
   input.placeholder="जैसे: प्रकाश - परावर्तन तथा अपवर्तन";
   info.textContent="AI शिक्षक आपको पूरा अध्याय आसान भाषा में समझाएँगे।";
- }
- else if(mode==="mcq"){
+ }else if(mode==="mcq"){
   label.textContent="किस अध्याय से MCQ चाहिए?";
   input.placeholder="जैसे: प्रकाश - परावर्तन तथा अपवर्तन";
   info.textContent="AI शिक्षक आपके लिए 5 MCQ प्रश्न बनाएँगे।";
- }
- else if(mode==="board"){
+ }else if(mode==="board"){
   label.textContent="अध्याय या विषय का नाम लिखें";
   input.placeholder="जैसे: रासायनिक अभिक्रियाएँ";
   info.textContent="महत्वपूर्ण परीक्षा और बोर्ड प्रश्न प्राप्त करें।";
- }
- else{
+ }else{
   label.textContent="अपना सवाल लिखें";
   input.placeholder="जैसे: 10 + 25 का उत्तर क्या है?";
   info.textContent="AI शिक्षक आपके सवाल का उत्तर देंगे।";
@@ -236,18 +225,15 @@ async function callAI(question,className,subject,language){
   headers:{"Content-Type":"application/json"},
   body:JSON.stringify({className,subject,language,question})
  });
-
  let data;
  try{
   data=await response.json();
  }catch(e){
   throw new Error("सर्वर से सही JSON जवाब नहीं मिला। HTTP "+response.status);
  }
-
  if(!response.ok||!data.success){
   throw new Error(data.error||"उत्तर प्राप्त नहीं हुआ। HTTP "+response.status);
  }
-
  return data;
 }
 
@@ -263,53 +249,43 @@ async function getAnswer(){
  }
 
  let prompt=question;
-
  if(currentMode==="mcq"){
   prompt="ठीक 5 MCQ बनाइए। हर प्रश्न में चार विकल्प A, B, C, D, सही उत्तर और व्याख्या दें। विषय: "+question;
- }
- else if(currentMode==="chapter"){
+ }else if(currentMode==="chapter"){
   prompt="अध्याय को शिक्षक की तरह समझाइए। विषय: "+question;
- }
- else if(currentMode==="board"){
+ }else if(currentMode==="board"){
   prompt="5 महत्वपूर्ण परीक्षा/बोर्ड प्रश्न और उनके उत्तर दीजिए। विषय: "+question;
  }
 
  const button=document.getElementById("askBtn");
  button.disabled=true;
  button.textContent="कृपया प्रतीक्षा करें...";
-
  document.getElementById("answerCard").style.display="block";
  document.getElementById("status").textContent="✨ AI शिक्षक आपका उत्तर तैयार कर रहे हैं...";
  document.getElementById("result").innerHTML="";
 
  try{
   const data=await callAI(prompt,className,subject,language);
-
   document.getElementById("status").textContent="";
 
   if(currentMode==="mcq"){
    if(!Array.isArray(data.quiz)||data.quiz.length!==5){
     throw new Error("MCQ सही प्रारूप में नहीं मिले। दोबारा प्रयास करें।");
    }
-
    currentQuiz=data.quiz;
    currentQuizMeta={className,subject,chapter:question};
    retryQuestions=[];
    showQuiz(currentQuiz);
-
   }else{
    if(typeof data.answer!=="string"||!data.answer.trim()){
     throw new Error("AI से खाली उत्तर मिला। कृपया दोबारा प्रयास करें।");
    }
-
    document.getElementById("result").innerHTML=
     '<div class="answer-text">'+escapeHTML(data.answer)+'</div>';
   }
-
  }catch(error){
   showMessage("समस्या: "+error.message,true);
- }
- finally{
+ }finally{
   button.disabled=false;
   button.textContent="✨ AI से उत्तर प्राप्त करें";
  }
@@ -318,45 +294,35 @@ async function getAnswer(){
 function showQuiz(questions){
  quizSubmitted=false;
  selectedAnswers={};
-
  document.getElementById("answerCard").style.display="block";
  document.getElementById("status").textContent="";
 
  let html="<h3>🎯 MCQ अभ्यास</h3><p>सभी प्रश्नों के उत्तर चुनें और टेस्ट जमा करें।</p>";
-
  questions.forEach((q,index)=>{
   html+='<div class="quiz-question" id="question'+index+'">';
   html+='<h4>'+(index+1)+'. '+escapeHTML(q.question)+'</h4>';
-
   ["A","B","C","D"].forEach(letter=>{
    html+='<label class="quiz-option">';
    html+='<input type="radio" name="answer'+index+'" value="'+letter+'" onchange="selectAnswer('+index+',\''+letter+'\')">';
    html+='<span>'+letter+'. '+escapeHTML(q.options?q.options[letter]:"")+'</span>';
    html+='</label>';
   });
-
   html+='<div class="explanation" id="explanation'+index+'"></div>';
   html+='</div>';
  });
-
  html+='<button class="primary" id="submitQuizBtn" onclick="submitQuiz()">टेस्ट जमा करें</button>';
-
  document.getElementById("result").innerHTML=html;
 }
 
 function selectAnswer(index,answer){
- if(!quizSubmitted){
-  selectedAnswers[index]=answer;
- }
+ if(!quizSubmitted)selectedAnswers[index]=answer;
 }
 
 function getProgress(){
  try{
   const data=JSON.parse(localStorage.getItem("aiSmartStudyProgressV1")||"[]");
   return Array.isArray(data)?data:[];
- }catch(e){
-  return [];
- }
+ }catch(e){return [];}
 }
 
 function saveProgress(record){
@@ -373,12 +339,10 @@ function saveProgress(record){
 function renderProgress(){
  const history=getProgress();
  const totalTests=history.length;
-
  const totalQuestions=history.reduce((s,x)=>s+Number(x.total||0),0);
  const totalCorrect=history.reduce((s,x)=>s+Number(x.correct||0),0);
  const totalWrong=history.reduce((s,x)=>s+Number(x.wrong||0),0);
  const totalUnanswered=history.reduce((s,x)=>s+Number(x.unanswered||0),0);
-
  const average=totalQuestions?Math.round(totalCorrect/totalQuestions*100):0;
 
  document.getElementById("totalTests").textContent=totalTests;
@@ -389,109 +353,65 @@ function renderProgress(){
  document.getElementById("averageScore").textContent=average+"%";
 
  const subjects={},chapters={};
-
  history.forEach(item=>{
   const sn=item.subject||"अन्य";
-
-  if(!subjects[sn]){
-   subjects[sn]={tests:0,correct:0,total:0};
-  }
-
+  if(!subjects[sn])subjects[sn]={tests:0,correct:0,total:0};
   subjects[sn].tests++;
   subjects[sn].correct+=Number(item.correct||0);
   subjects[sn].total+=Number(item.total||0);
 
   const cn=item.chapter||"अध्याय का नाम नहीं";
   const key=sn+"|||"+cn;
-
-  if(!chapters[key]){
-   chapters[key]={subject:sn,chapter:cn,tests:0,correct:0,total:0};
-  }
-
+  if(!chapters[key])chapters[key]={subject:sn,chapter:cn,tests:0,correct:0,total:0};
   chapters[key].tests++;
   chapters[key].correct+=Number(item.correct||0);
   chapters[key].total+=Number(item.total||0);
  });
 
- const subjectBox=document.getElementById("subjectProgress");
-
- subjectBox.innerHTML=Object.keys(subjects).length?
+ document.getElementById("subjectProgress").innerHTML=Object.keys(subjects).length?
  Object.keys(subjects).map(name=>{
   const x=subjects[name];
   const p=x.total?Math.round(x.correct/x.total*100):0;
-
-  return '<div class="history-item"><strong>'+
-   escapeHTML(name)+'</strong><p>टेस्ट: '+x.tests+
-   ' | सही: '+x.correct+' | प्रदर्शन: '+p+
-   '%</p><div class="report-bar"><div class="report-fill" style="width:'+p+'%"></div></div></div>';
+  return '<div class="history-item"><strong>'+escapeHTML(name)+'</strong><p>टेस्ट: '+x.tests+' | सही: '+x.correct+' | प्रदर्शन: '+p+'%</p><div class="report-bar"><div class="report-fill" style="width:'+p+'%"></div></div></div>';
  }).join(""):"अभी कोई टेस्ट रिकॉर्ड नहीं है।";
 
  const chapterList=Object.values(chapters).sort((a,b)=>
-  (a.correct/Math.max(a.total,1))-
-  (b.correct/Math.max(b.total,1))
+  (a.correct/Math.max(a.total,1))-(b.correct/Math.max(b.total,1))
  );
 
- document.getElementById("chapterProgress").innerHTML=
- chapterList.length?chapterList.map(x=>{
+ document.getElementById("chapterProgress").innerHTML=chapterList.length?
+ chapterList.map(x=>{
   const p=Math.round(x.correct/Math.max(x.total,1)*100);
-
-  return '<div class="history-item"><strong>'+
-   escapeHTML(x.chapter)+'</strong><p>'+
-   escapeHTML(x.subject)+' | टेस्ट: '+x.tests+
-   ' | स्कोर: '+p+'%</p><div class="report-bar"><div class="report-fill" style="width:'+p+'%"></div></div></div>';
+  return '<div class="history-item"><strong>'+escapeHTML(x.chapter)+'</strong><p>'+escapeHTML(x.subject)+' | टेस्ट: '+x.tests+' | स्कोर: '+p+'%</p><div class="report-bar"><div class="report-fill" style="width:'+p+'%"></div></div></div>';
  }).join(""):"अभी कोई अध्याय रिकॉर्ड नहीं है।";
 
- const weak=chapterList.filter(x=>
-  x.total>=3&&x.correct/x.total<0.6
- );
-
- document.getElementById("weakChapters").innerHTML=
- weak.length?weak.map(x=>
-  '<div class="history-item weak"><strong>⚠️ '+
-  escapeHTML(x.chapter)+'</strong><p>'+
-  escapeHTML(x.subject)+' में '+
-  Math.round(x.correct/x.total*100)+
-  '% स्कोर। इस अध्याय का दोबारा अभ्यास करें।</p></div>'
- ).join(""):"अभी कोई कमजोर अध्याय नहीं मिला। कम से कम 3 प्रश्नों वाले अध्याय का स्कोर 60% से कम होने पर यहाँ दिखेगा।";
+ const weak=chapterList.filter(x=>x.total>=3&&x.correct/x.total<0.6);
+ document.getElementById("weakChapters").innerHTML=weak.length?
+ weak.map(x=>'<div class="history-item weak"><strong>⚠️ '+escapeHTML(x.chapter)+'</strong><p>'+escapeHTML(x.subject)+' में '+Math.round(x.correct/x.total*100)+'% स्कोर। इस अध्याय का दोबारा अभ्यास करें।</p></div>').join("")
+ :"अभी कोई कमजोर अध्याय नहीं मिला। कम से कम 3 प्रश्नों वाले अध्याय का स्कोर 60% से कम होने पर यहाँ दिखेगा।";
 
  const badges=[];
-
  if(totalTests>=1)badges.push("🌱 पहली परीक्षा");
  if(totalTests>=5)badges.push("📚 5 टेस्ट पूरे");
  if(totalTests>=10)badges.push("🔥 10 टेस्ट पूरे");
  if(totalCorrect>=25)badges.push("⭐ 25 सही उत्तर");
  if(totalCorrect>=50)badges.push("🏅 50 सही उत्तर");
  if(average>=80&&totalTests>=3)badges.push("🏆 80% से अधिक औसत");
+ if(totalTests>=1&&history[history.length-1].percentage===100)badges.push("💯 परफेक्ट टेस्ट");
 
- if(totalTests>=1&&history[history.length-1].percentage===100){
-  badges.push("💯 परफेक्ट टेस्ट");
- }
-
- document.getElementById("achievements").innerHTML=
- badges.length?badges.map(x=>
-  '<span class="achievement">'+x+'</span>'
- ).join(""):"अभी कोई उपलब्धि नहीं। पहला MCQ टेस्ट देकर शुरुआत करें।";
+ document.getElementById("achievements").innerHTML=badges.length?
+ badges.map(x=>'<span class="achievement">'+x+'</span>').join("")
+ :"अभी कोई उपलब्धि नहीं। पहला MCQ टेस्ट देकर शुरुआत करें।";
 
  const historyBox=document.getElementById("testHistory");
-
  historyBox.innerHTML=history.length?
  history.slice(-5).reverse().map(x=>
-  '<div class="history-item"><strong>'+
-  escapeHTML(x.subject||"विषय")+' — '+
-  escapeHTML(x.chapter||"अध्याय")+
-  '</strong><p>कक्षा '+
-  escapeHTML(x.className||"")+
-  ' | स्कोर: '+Number(x.percentage||0)+
-  '%</p><p>सही: '+Number(x.correct||0)+
-  ' | गलत: '+Number(x.wrong||0)+
-  ' | छोड़े: '+Number(x.unanswered||0)+
-  '</p><p>'+escapeHTML(x.date||"")+'</p></div>'
+  '<div class="history-item"><strong>'+escapeHTML(x.subject||"विषय")+' — '+escapeHTML(x.chapter||"अध्याय")+'</strong><p>कक्षा '+escapeHTML(x.className||"")+' | स्कोर: '+Number(x.percentage||0)+'%</p><p>सही: '+Number(x.correct||0)+' | गलत: '+Number(x.wrong||0)+' | छोड़े: '+Number(x.unanswered||0)+'</p><p>'+escapeHTML(x.date||"")+'</p></div>'
  ).join(""):"अभी कोई टेस्ट रिकॉर्ड नहीं है।";
 }
 
-/* UPDATED AI STUDY REPORT */
+/* AI STUDY REPORT - UPDATED */
 async function getStudyAdvice(){
-
  const history=getProgress();
  const button=document.getElementById("adviceBtn");
  const output=document.getElementById("adviceResult");
@@ -506,7 +426,6 @@ async function getStudyAdvice(){
  output.textContent="✨ आपकी पढ़ाई का विश्लेषण किया जा रहा है...";
 
  const recent=history.slice(-20);
-
  const total=recent.reduce((s,x)=>s+Number(x.total||0),0);
  const correct=recent.reduce((s,x)=>s+Number(x.correct||0),0);
  const wrong=recent.reduce((s,x)=>s+Number(x.wrong||0),0);
@@ -521,6 +440,7 @@ async function getStudyAdvice(){
  ).join("\n");
 
  const prompt=
+ "AI स्टडी रिपोर्ट बनाएँ। यह विद्यार्थी की पढ़ाई सुधारने की सलाह वाली स्टडी रिपोर्ट है। "+
  "आप एक अनुभवी और प्रोत्साहित करने वाले स्कूल शिक्षक हैं। "+
  "विद्यार्थी की नीचे दी गई MCQ रिपोर्ट का विश्लेषण करें।\n"+
  "कुल टेस्ट: "+recent.length+
@@ -537,9 +457,7 @@ async function getStudyAdvice(){
  "\nकेवल दिए गए रिकॉर्ड के आधार पर जवाब दें। तथ्य न गढ़ें।";
 
  try{
-
   const latest=recent[recent.length-1];
-
   const data=await callAI(
    prompt,
    latest.className||document.getElementById("className").value,
@@ -547,41 +465,29 @@ async function getStudyAdvice(){
    document.getElementById("language").value
   );
 
-  if(!data){
-   throw new Error("AI सर्वर से कोई जवाब नहीं मिला।");
-  }
-
+  if(!data)throw new Error("AI सर्वर से कोई जवाब नहीं मिला।");
   if(typeof data.answer!=="string"||!data.answer.trim()){
    throw new Error("AI सर्वर से खाली जवाब मिला। कृपया दोबारा प्रयास करें।");
   }
-
   output.textContent=data.answer.trim();
 
  }catch(error){
-
   console.error("AI Study Report Error:",error);
-
   output.textContent="AI रिपोर्ट नहीं बन पाई: "+error.message;
-
  }finally{
-
   button.disabled=false;
   button.textContent="✨ मेरी AI स्टडी रिपोर्ट बनाएँ";
-
  }
 }
 
 function submitQuiz(){
-
  if(quizSubmitted)return;
-
  quizSubmitted=true;
 
  let correct=0,wrong=0,unanswered=0;
  retryQuestions=[];
 
  currentQuiz.forEach((q,index)=>{
-
   const selected=selectedAnswers[index];
   const right=String(q.correctAnswer||"").toUpperCase();
   const box=document.getElementById("question"+index);
@@ -591,25 +497,19 @@ function submitQuiz(){
    unanswered++;
    retryQuestions.push(q);
    box.classList.add("wrong");
-  }
-  else if(selected===right){
+  }else if(selected===right){
    correct++;
    box.classList.add("correct");
-  }
-  else{
+  }else{
    wrong++;
    retryQuestions.push(q);
    box.classList.add("wrong");
   }
 
   ex.innerHTML=
-   '<p><strong>आपका उत्तर:</strong> '+
-   escapeHTML(selected||"नहीं दिया")+
-   '</p><p><strong>सही उत्तर:</strong> '+
-   escapeHTML(right)+
-   '</p><p><strong>व्याख्या:</strong> '+
-   escapeHTML(q.explanation||"")+'</p>';
-
+   '<p><strong>आपका उत्तर:</strong> '+escapeHTML(selected||"नहीं दिया")+
+   '</p><p><strong>सही उत्तर:</strong> '+escapeHTML(right)+
+   '</p><p><strong>व्याख्या:</strong> '+escapeHTML(q.explanation||"")+'</p>';
  });
 
  const total=currentQuiz.length;
@@ -619,16 +519,11 @@ function submitQuiz(){
   className:currentQuizMeta.className,
   subject:currentQuizMeta.subject,
   chapter:currentQuizMeta.chapter,
-  total,
-  correct,
-  wrong,
-  unanswered,
-  percentage,
+  total,correct,wrong,unanswered,percentage,
   date:new Date().toLocaleDateString("hi-IN")
  });
 
- let score=
-  '<div class="score"><h2>📊 आपका परिणाम</h2>'+
+ let score='<div class="score"><h2>📊 आपका परिणाम</h2>'+
   '<p>कुल प्रश्न: '+total+'</p>'+
   '<p>सही उत्तर: '+correct+'</p>'+
   '<p>गलत उत्तर: '+wrong+'</p>'+
@@ -640,30 +535,20 @@ function submitQuiz(){
   '<p>🎉 शानदार! आपने सभी प्रश्न सही किए।</p>';
 
  document.getElementById("result").innerHTML+=score;
-
  const submit=document.getElementById("submitQuizBtn");
  if(submit)submit.remove();
 }
 
 function startRetryQuiz(){
-
  if(!retryQuestions.length)return;
-
  currentQuiz=retryQuestions.slice();
  retryQuestions=[];
-
  showQuiz(currentQuiz);
-
- document.getElementById("answerCard").scrollIntoView({
-  behavior:"smooth",
-  block:"start"
- });
+ document.getElementById("answerCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function clearProgress(){
-
  if(!confirm("क्या आप अपनी पूरी प्रगति रिपोर्ट मिटाना चाहते हैं?"))return;
-
  try{
   localStorage.removeItem("aiSmartStudyProgressV1");
   document.getElementById("adviceResult").textContent="";
