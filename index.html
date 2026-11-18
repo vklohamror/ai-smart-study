@@ -100,13 +100,31 @@ footer{text-align:center;color:#9aa6cc;padding:20px}
 <option value="English">English</option>
 </select>
 
-<div>
 <label id="inputLabel">अपना सवाल लिखें</label>
 <textarea id="question" placeholder="जैसे: 10 + 25 का उत्तर क्या है?"></textarea>
-</div>
 
 <div id="modeInfo" class="progress-note">AI शिक्षक आपके सवाल का उत्तर देंगे।</div>
 <button class="primary" id="askBtn" onclick="getAnswer()">✨ AI से उत्तर प्राप्त करें</button>
+</div>
+
+<!-- DAILY TEST -->
+<div class="card">
+<h2>📅 आज का रोज़ाना टेस्ट</h2>
+<p class="progress-note">हर दिन 5 नए प्रश्न हल करें। अपना ज्ञान बढ़ाएँ और लगातार पढ़ाई की आदत बनाएँ।</p>
+
+<div class="progress-grid">
+<div class="progress-item">
+<div class="progress-label">🔥 लगातार दिन</div>
+<div class="progress-number" id="dailyStreak">0</div>
+</div>
+<div class="progress-item">
+<div class="progress-label">आज की स्थिति</div>
+<div class="progress-number" id="dailyStatus" style="font-size:18px">बाकी है</div>
+</div>
+</div>
+
+<button class="primary" id="dailyBtn" onclick="startDailyTest()">🎯 आज का 5 प्रश्न टेस्ट शुरू करें</button>
+<div id="dailyMessage" class="progress-note" style="margin-top:10px"></div>
 </div>
 
 <div class="card">
@@ -176,6 +194,7 @@ let retryQuestions=[];
 let selectedAnswers={};
 let quizSubmitted=false;
 let isRetryMode=false;
+let isDailyMode=false;
 
 function escapeHTML(value){
  return String(value??"").replace(/[&<>"']/g,c=>({
@@ -233,6 +252,7 @@ function saveProgress(record){
 
 function setMode(mode){
  currentMode=mode;
+ isDailyMode=false;
  ["question","chapter","mcq","board"].forEach(item=>{
   document.getElementById(item+"Mode").className=item===mode?"active":"secondary";
  });
@@ -307,9 +327,10 @@ async function getAnswer(){
   if(currentMode==="mcq"){
    if(!Array.isArray(data.quiz)||data.quiz.length!==5)throw new Error("MCQ सही प्रारूप में नहीं मिले।");
    currentQuiz=data.quiz;
-   currentQuizMeta={className,subject,chapter:question};
+   currentQuizMeta={className,subject,chapter:question,testType:"mcq"};
    retryQuestions=[];
    isRetryMode=false;
+   isDailyMode=false;
    showQuiz(currentQuiz);
   }else{
    document.getElementById("result").innerHTML='<div class="answer-text">'+escapeHTML(data.answer||"उत्तर उपलब्ध नहीं है।")+'</div>';
@@ -322,13 +343,121 @@ async function getAnswer(){
  }
 }
 
+/* रोज़ का टेस्ट */
+function getTodayKey(){
+ return new Date().toISOString().slice(0,10);
+}
+
+function getDailyRecords(){
+ return getProgress().filter(x=>x.testType==="daily"&&x.dayKey);
+}
+
+function hasDailyTestToday(){
+ return getDailyRecords().some(x=>x.dayKey===getTodayKey());
+}
+
+function getDailyStreak(){
+ const days=[...new Set(getDailyRecords().map(x=>x.dayKey))].sort().reverse();
+ if(!days.length)return 0;
+
+ const today=getTodayKey();
+ const yesterday=new Date();
+ yesterday.setDate(yesterday.getDate()-1);
+ const yesterdayKey=yesterday.toISOString().slice(0,10);
+
+ if(days[0]!==today&&days[0]!==yesterdayKey)return 0;
+
+ let streak=0;
+ let checkDate=new Date(days[0]+"T00:00:00");
+
+ for(let i=0;i<days.length;i++){
+  const expected=checkDate.toISOString().slice(0,10);
+  if(days.includes(expected)){
+   streak++;
+   checkDate.setDate(checkDate.getDate()-1);
+  }else{
+   break;
+  }
+ }
+ return streak;
+}
+
+function renderDailyStatus(){
+ const done=hasDailyTestToday();
+ document.getElementById("dailyStreak").textContent=getDailyStreak();
+ document.getElementById("dailyStatus").textContent=done?"पूरा हुआ ✅":"बाकी है";
+
+ const button=document.getElementById("dailyBtn");
+ button.disabled=done;
+ button.textContent=done?"✅ आज का टेस्ट पूरा हो गया":"🎯 आज का 5 प्रश्न टेस्ट शुरू करें";
+
+ document.getElementById("dailyMessage").textContent=done?
+ "आज आपने अपना टेस्ट पूरा कर लिया। कल फिर नया टेस्ट मिलेगा।":
+ "आज का टेस्ट पूरा करें और अपनी लगातार पढ़ाई का रिकॉर्ड बनाएँ।";
+}
+
+async function startDailyTest(){
+ if(hasDailyTestToday()){
+  renderDailyStatus();
+  showMessage("आज का रोज़ाना टेस्ट आप पहले ही पूरा कर चुके हैं। कल फिर नया टेस्ट करें।",false);
+  return;
+ }
+
+ const className=document.getElementById("className").value;
+ const subject=document.getElementById("subject").value;
+ const language=document.getElementById("language").value;
+
+ const prompt=
+ "आज के अभ्यास के लिए ठीक 5 MCQ बनाइए। "+
+ "चार विकल्प A, B, C, D दें, सही उत्तर और आसान भाषा में व्याख्या दें। "+
+ "प्रश्न नए हों, कक्षा "+className+" के स्तर के अनुसार हों। "+
+ "आज के दैनिक टेस्ट के लिए विषय "+subject+" है।";
+
+ const button=document.getElementById("dailyBtn");
+ button.disabled=true;
+ button.textContent="आज के सवाल बनाए जा रहे हैं...";
+
+ document.getElementById("answerCard").style.display="block";
+ document.getElementById("status").textContent="📅 आज के टेस्ट के सवाल तैयार हो रहे हैं...";
+ document.getElementById("result").innerHTML="";
+
+ try{
+  const data=await callAI(prompt,className,subject,language);
+  if(!Array.isArray(data.quiz)||data.quiz.length!==5){
+   throw new Error("5 MCQ सही प्रारूप में नहीं मिले।");
+  }
+
+  currentQuiz=data.quiz;
+  currentQuizMeta={
+   className,subject,
+   chapter:"Daily Test - "+new Date().toLocaleDateString("hi-IN"),
+   testType:"daily"
+  };
+  retryQuestions=[];
+  isRetryMode=false;
+  isDailyMode=true;
+  showQuiz(currentQuiz);
+
+  document.getElementById("answerCard").scrollIntoView({behavior:"smooth",block:"start"});
+ }catch(error){
+  showMessage("रोज़ का टेस्ट शुरू नहीं हो पाया: "+error.message,true);
+ }finally{
+  renderDailyStatus();
+ }
+}
+
 function showQuiz(questions){
  quizSubmitted=false;
  selectedAnswers={};
  document.getElementById("answerCard").style.display="block";
  document.getElementById("status").textContent="";
 
- let html="<h3>🎯 MCQ अभ्यास</h3><p>सभी प्रश्नों के उत्तर चुनें और टेस्ट जमा करें।</p>";
+ let html="<h3>"+(isDailyMode?"📅 आज का रोज़ाना टेस्ट":"🎯 MCQ अभ्यास")+"</h3>";
+ html+="<p>सभी प्रश्नों के उत्तर चुनें और टेस्ट जमा करें।</p>";
+
+ if(isRetryMode){
+  html+='<p class="progress-note">🔁 यह दोबारा अभ्यास है; आपकी मुख्य रिपोर्ट में नया टेस्ट नहीं जोड़ा जाएगा।</p>';
+ }
 
  questions.forEach((q,index)=>{
   html+='<div class="quiz-question" id="question'+index+'"><h4>'+(index+1)+'. '+escapeHTML(q.question)+'</h4>';
@@ -352,6 +481,7 @@ function getChapterStats(){
  const chapters={};
 
  history.forEach(item=>{
+  if(item.testType==="daily")return;
   const subject=item.subject||"अन्य";
   const chapter=cleanChapterName(item.chapter);
   const key=subject+"|||"+chapter;
@@ -371,7 +501,7 @@ function getChapterStats(){
  }));
 }
 
-/* सबसे कमजोर अध्याय से नया टेस्ट */
+/* कमजोर अध्याय से नया टेस्ट */
 async function startWeakChapterPractice(){
  const chapters=getChapterStats();
 
@@ -380,12 +510,8 @@ async function startWeakChapterPractice(){
   return;
  }
 
- const weak=chapters
-  .filter(x=>x.total>=3&&x.percentage<60)
-  .sort((a,b)=>a.percentage-b.percentage);
-
- const selected=weak.length?weak[0]:
-  chapters.slice().sort((a,b)=>a.percentage-b.percentage)[0];
+ const weak=chapters.filter(x=>x.total>=3&&x.percentage<60).sort((a,b)=>a.percentage-b.percentage);
+ const selected=weak.length?weak[0]:chapters.slice().sort((a,b)=>a.percentage-b.percentage)[0];
 
  const button=document.getElementById("weakPracticeBtn");
  button.disabled=true;
@@ -395,35 +521,25 @@ async function startWeakChapterPractice(){
  const language=document.getElementById("language").value;
 
  const prompt=
-  "ठीक 5 MCQ बनाइए। हर प्रश्न में चार विकल्प A, B, C, D, सही उत्तर और आसान हिंदी में व्याख्या दें। "+
-  "ये प्रश्न विद्यार्थी के कमजोर अध्याय के अभ्यास के लिए हैं। "+
-  "सभी प्रश्न नए हों और कक्षा के स्तर के अनुसार हों। "+
-  "विषय: "+selected.subject+
-  ". अध्याय: "+selected.chapter+
-  ". विद्यार्थी का पिछला प्रदर्शन: "+selected.percentage+" प्रतिशत। "+
-  "कमजोर अवधारणाओं को ध्यान में रखकर प्रश्न बनाइए।";
+ "ठीक 5 MCQ बनाइए। हर प्रश्न में चार विकल्प A, B, C, D, सही उत्तर और आसान हिंदी में व्याख्या दें। "+
+ "ये प्रश्न विद्यार्थी के कमजोर अध्याय के अभ्यास के लिए हैं। सभी प्रश्न नए हों। "+
+ "विषय: "+selected.subject+
+ ". अध्याय: "+selected.chapter+
+ ". विद्यार्थी का पिछला प्रदर्शन: "+selected.percentage+" प्रतिशत। "+
+ "कमजोर अवधारणाओं को ध्यान में रखकर प्रश्न बनाइए।";
 
  try{
   const data=await callAI(prompt,className,selected.subject,language);
-
-  if(!Array.isArray(data.quiz)||data.quiz.length!==5){
-   throw new Error("AI से 5 MCQ सही प्रारूप में नहीं मिले।");
-  }
+  if(!Array.isArray(data.quiz)||data.quiz.length!==5)throw new Error("AI से 5 MCQ सही प्रारूप में नहीं मिले।");
 
   currentQuiz=data.quiz;
-  currentQuizMeta={
-   className,
-   subject:selected.subject,
-   chapter:selected.chapter+" (कमजोर अध्याय अभ्यास)"
-  };
+  currentQuizMeta={className,subject:selected.subject,chapter:selected.chapter+" (कमजोर अध्याय अभ्यास)"};
   retryQuestions=[];
   isRetryMode=false;
+  isDailyMode=false;
   showQuiz(currentQuiz);
 
-  document.getElementById("answerCard").scrollIntoView({
-   behavior:"smooth",block:"start"
-  });
-
+  document.getElementById("answerCard").scrollIntoView({behavior:"smooth",block:"start"});
  }catch(error){
   showMessage("अभ्यास शुरू नहीं हो पाया: "+error.message,true);
  }finally{
@@ -467,33 +583,29 @@ function renderProgress(){
  });
 
  document.getElementById("subjectProgress").innerHTML=
-  Object.keys(subjects).length?
-  Object.keys(subjects).map(name=>{
-   const x=subjects[name];
-   const p=x.total?Math.round(x.correct/x.total*100):0;
-   return '<div class="history-item"><strong>'+escapeHTML(name)+'</strong><p>टेस्ट: '+x.tests+' | सही: '+x.correct+' | प्रदर्शन: '+p+'%</p><div class="report-bar"><div class="report-fill" style="width:'+p+'%"></div></div></div>';
-  }).join(""):"अभी कोई टेस्ट रिकॉर्ड नहीं है।";
+ Object.keys(subjects).length?
+ Object.keys(subjects).map(name=>{
+  const x=subjects[name];
+  const p=x.total?Math.round(x.correct/x.total*100):0;
+  return '<div class="history-item"><strong>'+escapeHTML(name)+'</strong><p>टेस्ट: '+x.tests+' | सही: '+x.correct+' | प्रदर्शन: '+p+'%</p><div class="report-bar"><div class="report-fill" style="width:'+p+'%"></div></div></div>';
+ }).join(""):"अभी कोई टेस्ट रिकॉर्ड नहीं है।";
 
- const chapterList=Object.values(chapters).sort((a,b)=>
-  a.correct/Math.max(a.total,1)-b.correct/Math.max(b.total,1)
- );
+ const chapterList=Object.values(chapters).sort((a,b)=>a.correct/Math.max(a.total,1)-b.correct/Math.max(b.total,1));
 
  document.getElementById("chapterProgress").innerHTML=
-  chapterList.length?
-  chapterList.map(x=>{
-   const p=Math.round(x.correct/Math.max(x.total,1)*100);
-   return '<div class="history-item"><strong>'+escapeHTML(x.chapter)+'</strong><p>'+escapeHTML(x.subject)+' | टेस्ट: '+x.tests+' | स्कोर: '+p+'%</p><div class="report-bar"><div class="report-fill" style="width:'+p+'%"></div></div></div>';
-  }).join(""):"अभी कोई अध्याय रिकॉर्ड नहीं है।";
+ chapterList.length?
+ chapterList.map(x=>{
+  const p=Math.round(x.correct/Math.max(x.total,1)*100);
+  return '<div class="history-item"><strong>'+escapeHTML(x.chapter)+'</strong><p>'+escapeHTML(x.subject)+' | टेस्ट: '+x.tests+' | स्कोर: '+p+'%</p><div class="report-bar"><div class="report-fill" style="width:'+p+'%"></div></div></div>';
+ }).join(""):"अभी कोई अध्याय रिकॉर्ड नहीं है।";
 
  const weak=chapterList.filter(x=>x.total>=3&&x.correct/x.total<0.6);
-
  document.getElementById("weakChapters").innerHTML=
-  weak.length?
-  weak.map(x=>'<div class="history-item weak"><strong>⚠️ '+escapeHTML(x.chapter)+'</strong><p>'+escapeHTML(x.subject)+' में '+Math.round(x.correct/x.total*100)+'% स्कोर। इस अध्याय का दोबारा अभ्यास करें।</p></div>').join("")
-  :"अभी कोई कमजोर अध्याय नहीं मिला। कम से कम 3 प्रश्नों वाले अध्याय का स्कोर 60% से कम होने पर यहाँ दिखेगा।";
+ weak.length?
+ weak.map(x=>'<div class="history-item weak"><strong>⚠️ '+escapeHTML(x.chapter)+'</strong><p>'+escapeHTML(x.subject)+' में '+Math.round(x.correct/x.total*100)+'% स्कोर। इस अध्याय का दोबारा अभ्यास करें।</p></div>').join("")
+ :"अभी कोई कमजोर अध्याय नहीं मिला। कम से कम 3 प्रश्नों वाले अध्याय का स्कोर 60% से कम होने पर यहाँ दिखेगा।";
 
- const practiceButton=document.getElementById("weakPracticeBtn");
- practiceButton.disabled=history.length===0;
+ document.getElementById("weakPracticeBtn").disabled=history.filter(x=>x.testType!=="daily").length===0;
 
  const badges=[];
  if(totalTests>=1)badges.push("🌱 पहली परीक्षा");
@@ -505,9 +617,151 @@ function renderProgress(){
  if(totalTests>=1&&history[0].percentage===100)badges.push("💯 परफेक्ट टेस्ट");
 
  document.getElementById("achievements").innerHTML=badges.length?
-  badges.map(x=>'<span class="achievement">'+x+'</span>').join("")
-  :"अभी कोई उपलब्धि नहीं। पहला MCQ टेस्ट देकर शुरुआत करें।";
+ badges.map(x=>'<span class="achievement">'+x+'</span>').join("")
+ :"अभी कोई उपलब्धि नहीं। पहला MCQ टेस्ट देकर शुरुआत करें।";
 
  document.getElementById("testHistory").innerHTML=history.length?
-  history.slice(0,10).map(x=>
-   '<div class="history-item"><strong>'+escapeHTML(x.subject||"विषय")+' — '+escapeHTML(cleanChapte
+ history.slice(0,10).map(x=>
+  '<div class="history-item"><strong>'+escapeHTML(x.testType==="daily"?"📅 रोज़ का टेस्ट":x.subject||"विषय")+' — '+escapeHTML(cleanChapterName(x.chapter))+'</strong><p>कक्षा '+escapeHTML(x.className)+' | स्कोर: '+x.percentage+'%</p><p>सही: '+x.correct+' | गलत: '+x.wrong+' | छोड़े: '+x.unanswered+'</p><p>'+escapeHTML(x.date||"")+'</p></div>'
+ ).join("")
+ :"अभी कोई टेस्ट रिकॉर्ड नहीं है।";
+
+ renderDailyStatus();
+}
+
+async function getStudyAdvice(){
+ const history=getProgress();
+ if(!history.length){
+  document.getElementById("adviceResult").textContent="पहले कम से कम एक MCQ टेस्ट दें।";
+  return;
+ }
+
+ const button=document.getElementById("adviceBtn");
+ const output=document.getElementById("adviceResult");
+ button.disabled=true;
+ button.textContent="AI रिपोर्ट बना रहा है...";
+ output.textContent="कृपया प्रतीक्षा करें...";
+
+ const total=history.reduce((s,x)=>s+x.total,0);
+ const correct=history.reduce((s,x)=>s+x.correct,0);
+ const wrong=history.reduce((s,x)=>s+x.wrong,0);
+ const chapters=getChapterStats();
+
+ const chapterLines=chapters.map(x=>x.subject+" — "+x.chapter+": "+x.correct+"/"+x.total+" सही, "+x.percentage+"%").join("\n");
+
+ const prompt=
+ "आप एक अनुभवी स्कूल शिक्षक हैं। विद्यार्थी को सरल हिंदी में पढ़ाई सुधारने की सलाह दें।\n"+
+ "कुल टेस्ट: "+history.length+
+ ", कुल प्रश्न: "+total+
+ ", सही: "+correct+
+ ", गलत: "+wrong+
+ ", औसत: "+Math.round(correct/Math.max(total,1)*100)+"%.\n"+
+ "अध्यायवार रिकॉर्ड:\n"+chapterLines+"\n"+
+ "कमजोर अध्यायों के लिए 7 दिन की योजना दें। रोज 5 से 10 प्रश्नों के अभ्यास की सलाह दें। "+
+ "कोई नया आँकड़ा न गढ़ें। विद्यार्थी का आत्मविश्वास बढ़ाएँ।";
+
+ try{
+  const latest=history[0];
+  const data=await callAI(prompt,latest.className||document.getElementById("className").value,latest.subject||document.getElementById("subject").value,document.getElementById("language").value);
+  output.textContent=data.answer||"AI सुझाव उपलब्ध नहीं हैं।";
+ }catch(e){
+  output.textContent="AI रिपोर्ट नहीं बन पाई: "+e.message;
+ }finally{
+  button.disabled=false;
+  button.textContent="✨ मेरी AI स्टडी रिपोर्ट बनाएँ";
+ }
+}
+
+function submitQuiz(){
+ if(quizSubmitted)return;
+ quizSubmitted=true;
+
+ let correct=0,wrong=0,unanswered=0;
+ retryQuestions=[];
+
+ currentQuiz.forEach((q,index)=>{
+  const selected=selectedAnswers[index];
+  const right=String(q.correctAnswer||"").toUpperCase();
+  const box=document.getElementById("question"+index);
+  const ex=document.getElementById("explanation"+index);
+
+  if(!selected){
+   unanswered++;
+   retryQuestions.push(q);
+   box.classList.add("wrong");
+  }else if(selected===right){
+   correct++;
+   box.classList.add("correct");
+  }else{
+   wrong++;
+   retryQuestions.push(q);
+   box.classList.add("wrong");
+  }
+
+  ex.innerHTML=
+   '<p><strong>आपका उत्तर:</strong> '+escapeHTML(selected||"नहीं दिया")+'</p>'+
+   '<p><strong>सही उत्तर:</strong> '+escapeHTML(right)+'</p>'+
+   '<p><strong>व्याख्या:</strong> '+escapeHTML(q.explanation||"")+'</p>';
+ });
+
+ const total=currentQuiz.length;
+ const percentage=total?Math.round(correct/total*100):0;
+
+ if(!isRetryMode){
+  saveProgress({
+   className:currentQuizMeta.className,
+   subject:currentQuizMeta.subject,
+   chapter:currentQuizMeta.chapter,
+   testType:isDailyMode?"daily":"mcq",
+   dayKey:isDailyMode?getTodayKey():undefined,
+   total,correct,wrong,unanswered,percentage,
+   date:new Date().toLocaleDateString("hi-IN")
+  });
+ }
+
+ let score=
+ '<div class="score"><h2>📊 आपका परिणाम</h2>'+
+ '<p>कुल प्रश्न: '+total+'</p>'+
+ '<p>सही उत्तर: '+correct+'</p>'+
+ '<p>गलत उत्तर: '+wrong+'</p>'+
+ '<p>छूटे प्रश्न: '+unanswered+'</p>'+
+ '<h2>आपका स्कोर: '+percentage+'%</h2>'+
+ (isDailyMode?'<p>📅 आज का टेस्ट पूरा हुआ!</p>':'')+
+ (isRetryMode?'<p>🔁 यह दोबारा अभ्यास है, इसे मुख्य रिपोर्ट में नहीं जोड़ा गया।</p>':'')+
+ '</div>';
+
+ score+=retryQuestions.length?
+ '<button class="secondary" onclick="startRetryQuiz()">🔁 गलत और छूटे प्रश्न दोबारा करें ('+retryQuestions.length+')</button>':
+ '<p>🎉 शानदार! आपने सभी प्रश्न सही किए।</p>';
+
+ document.getElementById("result").innerHTML+=score;
+ const submit=document.getElementById("submitQuizBtn");
+ if(submit)submit.remove();
+ renderDailyStatus();
+}
+
+function startRetryQuiz(){
+ if(!retryQuestions.length)return;
+ currentQuiz=retryQuestions.slice();
+ retryQuestions=[];
+ isRetryMode=true;
+ showQuiz(currentQuiz);
+ document.getElementById("answerCard").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function clearProgress(){
+ if(!confirm("क्या आप अपनी पूरी प्रगति रिपोर्ट मिटाना चाहते हैं?"))return;
+ try{
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(ORDER_FIX_KEY);
+  document.getElementById("adviceResult").textContent="";
+  renderProgress();
+ }catch(e){
+  alert("प्रगति रिपोर्ट मिटाई नहीं जा सकी।");
+ }
+}
+
+document.addEventListener("DOMContentLoaded",renderProgress);
+</script>
+</body>
+</html>
