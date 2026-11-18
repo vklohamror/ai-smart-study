@@ -175,10 +175,11 @@ let currentQuizMeta={};
 let retryQuestions=[];
 let selectedAnswers={};
 let quizSubmitted=false;
+let isRetryMode=false;
 
 function escapeHTML(value){
  return String(value??"").replace(/[&<>"']/g,c=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
  }[c]));
 }
 
@@ -308,6 +309,7 @@ async function getAnswer(){
    currentQuiz=data.quiz;
    currentQuizMeta={className,subject,chapter:question};
    retryQuestions=[];
+   isRetryMode=false;
    showQuiz(currentQuiz);
   }else{
    document.getElementById("result").innerHTML='<div class="answer-text">'+escapeHTML(data.answer||"उत्तर उपलब्ध नहीं है।")+'</div>';
@@ -415,6 +417,7 @@ async function startWeakChapterPractice(){
    chapter:selected.chapter+" (कमजोर अध्याय अभ्यास)"
   };
   retryQuestions=[];
+  isRetryMode=false;
   showQuiz(currentQuiz);
 
   document.getElementById("answerCard").scrollIntoView({
@@ -507,142 +510,4 @@ function renderProgress(){
 
  document.getElementById("testHistory").innerHTML=history.length?
   history.slice(0,10).map(x=>
-   '<div class="history-item"><strong>'+escapeHTML(x.subject||"विषय")+' — '+escapeHTML(cleanChapterName(x.chapter))+'</strong><p>कक्षा '+escapeHTML(x.className)+' | स्कोर: '+x.percentage+'%</p><p>सही: '+x.correct+' | गलत: '+x.wrong+' | छोड़े: '+x.unanswered+'</p><p>'+escapeHTML(x.date||"")+'</p></div>'
-  ).join("")
-  :"अभी कोई टेस्ट रिकॉर्ड नहीं है।";
-}
-
-async function getStudyAdvice(){
- const history=getProgress();
- if(!history.length){
-  document.getElementById("adviceResult").textContent="पहले कम से कम एक MCQ टेस्ट दें।";
-  return;
- }
-
- const button=document.getElementById("adviceBtn");
- const output=document.getElementById("adviceResult");
- button.disabled=true;
- button.textContent="AI रिपोर्ट बना रहा है...";
- output.textContent="कृपया प्रतीक्षा करें...";
-
- const total=history.reduce((s,x)=>s+x.total,0);
- const correct=history.reduce((s,x)=>s+x.correct,0);
- const wrong=history.reduce((s,x)=>s+x.wrong,0);
- const chapters=getChapterStats();
-
- const chapterLines=chapters.map(x=>
-  x.subject+" — "+x.chapter+": "+x.correct+"/"+x.total+" सही, "+x.percentage+"%"
- ).join("\n");
-
- const prompt=
-  "आप एक अनुभवी स्कूल शिक्षक हैं। विद्यार्थी को सरल हिंदी में पढ़ाई सुधारने की सलाह दें।\n"+
-  "कुल टेस्ट: "+history.length+
-  ", कुल प्रश्न: "+total+
-  ", सही: "+correct+
-  ", गलत: "+wrong+
-  ", औसत: "+Math.round(correct/Math.max(total,1)*100)+"%.\n"+
-  "अध्यायवार रिकॉर्ड:\n"+chapterLines+"\n"+
-  "कमजोर अध्यायों के लिए 7 दिन की योजना दें। रोज 5 से 10 प्रश्नों के अभ्यास की सलाह दें। "+
-  "कोई नया आँकड़ा या तथ्य न गढ़ें। विद्यार्थी का आत्मविश्वास बढ़ाएँ।";
-
- try{
-  const latest=history[0];
-  const data=await callAI(
-   prompt,
-   latest.className||document.getElementById("className").value,
-   latest.subject||document.getElementById("subject").value,
-   document.getElementById("language").value
-  );
-  output.textContent=data.answer||"AI सुझाव उपलब्ध नहीं हैं।";
- }catch(e){
-  output.textContent="AI रिपोर्ट नहीं बन पाई: "+e.message;
- }finally{
-  button.disabled=false;
-  button.textContent="✨ मेरी AI स्टडी रिपोर्ट बनाएँ";
- }
-}
-
-function submitQuiz(){
- if(quizSubmitted)return;
- quizSubmitted=true;
-
- let correct=0,wrong=0,unanswered=0;
- retryQuestions=[];
-
- currentQuiz.forEach((q,index)=>{
-  const selected=selectedAnswers[index];
-  const right=String(q.correctAnswer||"").toUpperCase();
-  const box=document.getElementById("question"+index);
-  const ex=document.getElementById("explanation"+index);
-
-  if(!selected){
-   unanswered++;
-   retryQuestions.push(q);
-   box.classList.add("wrong");
-  }else if(selected===right){
-   correct++;
-   box.classList.add("correct");
-  }else{
-   wrong++;
-   retryQuestions.push(q);
-   box.classList.add("wrong");
-  }
-
-  ex.innerHTML=
-   '<p><strong>आपका उत्तर:</strong> '+escapeHTML(selected||"नहीं दिया")+'</p>'+
-   '<p><strong>सही उत्तर:</strong> '+escapeHTML(right)+'</p>'+
-   '<p><strong>व्याख्या:</strong> '+escapeHTML(q.explanation||"")+'</p>';
- });
-
- const total=currentQuiz.length;
- const percentage=total?Math.round(correct/total*100):0;
-
- saveProgress({
-  className:currentQuizMeta.className,
-  subject:currentQuizMeta.subject,
-  chapter:currentQuizMeta.chapter,
-  total,correct,wrong,unanswered,percentage,
-  date:new Date().toLocaleDateString("hi-IN")
- });
-
- let score=
-  '<div class="score"><h2>📊 आपका परिणाम</h2>'+
-  '<p>कुल प्रश्न: '+total+'</p>'+
-  '<p>सही उत्तर: '+correct+'</p>'+
-  '<p>गलत उत्तर: '+wrong+'</p>'+
-  '<p>छूटे प्रश्न: '+unanswered+'</p>'+
-  '<h2>आपका स्कोर: '+percentage+'%</h2></div>';
-
- score+=retryQuestions.length?
-  '<button class="secondary" onclick="startRetryQuiz()">🔁 गलत और छूटे प्रश्न दोबारा करें ('+retryQuestions.length+')</button>':
-  '<p>🎉 शानदार! आपने सभी प्रश्न सही किए।</p>';
-
- document.getElementById("result").innerHTML+=score;
- const submit=document.getElementById("submitQuizBtn");
- if(submit)submit.remove();
-}
-
-function startRetryQuiz(){
- if(!retryQuestions.length)return;
- currentQuiz=retryQuestions.slice();
- retryQuestions=[];
- showQuiz(currentQuiz);
- document.getElementById("answerCard").scrollIntoView({behavior:"smooth",block:"start"});
-}
-
-function clearProgress(){
- if(!confirm("क्या आप अपनी पूरी प्रगति रिपोर्ट मिटाना चाहते हैं?"))return;
- try{
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(ORDER_FIX_KEY);
-  document.getElementById("adviceResult").textContent="";
-  renderProgress();
- }catch(e){
-  alert("प्रगति रिपोर्ट मिटाई नहीं जा सकी।");
- }
-}
-
-document.addEventListener("DOMContentLoaded",renderProgress);
-</script>
-</body>
-</html>
+   '<div class="history-item"><strong>'+escapeHTML(x.subject||"विषय")+' — '+escapeHTML(cleanChapte
